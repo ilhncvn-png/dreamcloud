@@ -60,12 +60,50 @@ services:
       postgres:
         condition: service_healthy
 
+  # Run the API in Docker (optional — `npm run dev` from the repo root is preferred for DX)
+  api:
+    build:
+      context: ../../
+      dockerfile: apps/api/docker/Dockerfile.dev
+    container_name: dreamcloud-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the entire monorepo so hot-reload sees code changes
+      - ../../:/app
+      # Preserve node_modules built in the image (prevent host override)
+      - api_root_modules:/app/node_modules
+      - api_pkg_modules:/app/apps/api/node_modules
+    env_file:
+      - ../../apps/api/.env
+    environment:
+      NODE_ENV: development
+      # Override localhost URLs — containers communicate via service names
+      DATABASE_URL: postgresql://dreamcloud:dreamcloud_dev_pass@postgres:5432/dreamcloud_dev
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
   pgadmin_data:
+    driver: local
+  api_root_modules:
+    driver: local
+  api_pkg_modules:
     driver: local
 
 networks:

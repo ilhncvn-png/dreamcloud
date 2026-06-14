@@ -9,7 +9,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
 # ── Node.js version check ────────────────────────────────
-REQUIRED_NODE="20"
+REQUIRED_NODE="22"
 CURRENT_NODE=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1 || echo "0")
 if [ "$CURRENT_NODE" -lt "$REQUIRED_NODE" ]; then
   echo "ERROR: Node.js $REQUIRED_NODE+ required. Current: $(node -v 2>/dev/null || echo 'not found')"
