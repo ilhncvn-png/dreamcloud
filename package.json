@@ -1,0 +1,84 @@
+{
+  "name": "dreamcloud",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DreamCloud — Dream-sharing social media platform (Turborepo monorepo)",
+  "workspaces": [
+    "apps/api",
+    "apps/mobile",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "test": "turbo run test",
+    "test:ci": "turbo run test:ci",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:migrate": "turbo run migration:run --filter=@dreamcloud/api",
+    "db:seed": "turbo run seed --filter=@dreamcloud/api",
+    "infra:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "infra:logs": "docker compose -f infrastructure/docker/docker-compose.yml logs -f",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "prettier": "^3.4.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0"
+  },
+  "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,jsx,json,md}": [
+      "prettier --write"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "scope-enum": [
+        2,
+        "always",
+        [
+          "auth",
+          "dreams",
+          "users",
+          "feed",
+          "social",
+          "search",
+          "notifications",
+          "moderation",
+          "nlp",
+          "mobile",
+          "db",
+          "infra",
+          "api",
+          "config",
+          "deps",
+          "ci",
+          "shared"
+        ]
+      ]
+    }
+  }
+}

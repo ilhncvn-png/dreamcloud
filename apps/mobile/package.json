@@ -1,0 +1,70 @@
+{
+  "name": "@dreamcloud/mobile",
+  "version": "0.1.0",
+  "description": "DreamCloud Expo React Native App",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "build:preview": "eas build --profile preview --platform all",
+    "build:production": "eas build --profile production --platform all",
+    "submit:ios": "eas submit --platform ios",
+    "submit:android": "eas submit --platform android",
+    "test": "jest",
+    "test:ci": "jest --ci --coverage --forceExit",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"app/**/*.{ts,tsx}\"",
+    "type-check": "tsc --noEmit",
+    "clean": "expo prebuild --clean"
+  },
+  "dependencies": {
+    "expo": "~52.0.17",
+    "expo-router": "~4.0.14",
+    "expo-constants": "~17.0.3",
+    "expo-secure-store": "~14.0.0",
+    "expo-notifications": "~0.29.9",
+    "expo-image": "~2.0.4",
+    "expo-image-picker": "~16.0.4",
+    "expo-linear-gradient": "~14.0.1",
+    "expo-haptics": "~14.0.0",
+    "expo-status-bar": "~2.0.1",
+    "expo-splash-screen": "~0.29.18",
+    "react": "18.3.1",
+    "react-native": "0.76.5",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.3.0",
+    "@shopify/flash-list": "^1.7.1",
+    "react-native-reanimated": "~3.16.1",
+    "react-native-gesture-handler": "~2.21.1",
+    "zustand": "^5.0.2",
+    "@tanstack/react-query": "^5.62.7",
+    "axios": "^1.7.9",
+    "zod": "^3.24.1",
+    "react-hook-form": "^7.54.2",
+    "@hookform/resolvers": "^3.9.1",
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "@dreamcloud/eslint-config": "*",
+    "@dreamcloud/typescript-config": "*",
+    "@babel/core": "^7.25.2",
+    "@types/react": "~18.3.12",
+    "@testing-library/react-native": "^13.0.0",
+    "react-test-renderer": "18.3.1",
+    "jest": "^29.7.0",
+    "jest-expo": "~52.0.3",
+    "babel-plugin-module-resolver": "^5.0.2"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@shopify/flash-list)"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "app/**/*.{ts,tsx}"
+    ],
+    "coverageDirectory": "coverage"
+  }
+}

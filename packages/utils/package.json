@@ -1,0 +1,18 @@
+{
+  "name": "@dreamcloud/utils",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared utility functions for DreamCloud",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@dreamcloud/typescript-config": "*",
+    "typescript": "^5.7.2"
+  }
+}

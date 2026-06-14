@@ -1,0 +1,73 @@
+name: dreamcloud-dev
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: dreamcloud-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dreamcloud_dev
+      POSTGRES_USER: dreamcloud
+      POSTGRES_PASSWORD: dreamcloud_dev_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dreamcloud -d dreamcloud_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: dreamcloud-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly no
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: dreamcloud-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dreamcloud-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@dreamcloud.app
+      PGADMIN_DEFAULT_PASSWORD: dreamcloud_pgadmin_pass
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  default:
+    name: dreamcloud-dev

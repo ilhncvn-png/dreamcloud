@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# DreamCloud pre-commit: lint-staged on changed files only
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+npx lint-staged

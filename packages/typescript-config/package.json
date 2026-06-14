@@ -1,0 +1,14 @@
+{
+  "name": "@dreamcloud/typescript-config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared TypeScript configurations for DreamCloud",
+  "exports": {
+    "./base.json": "./base.json",
+    "./nestjs.json": "./nestjs.json",
+    "./react-native.json": "./react-native.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

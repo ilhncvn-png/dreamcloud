@@ -1,0 +1,77 @@
+name: Deploy — Production
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Tag
+        id: tag
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Deploy API
+        run: |
+          VERSION=${{ steps.tag.outputs.version }}
+          docker pull $ECR_REGISTRY/dreamcloud-api:staging-latest
+          docker tag $ECR_REGISTRY/dreamcloud-api:staging-latest $ECR_REGISTRY/dreamcloud-api:$VERSION
+          docker tag $ECR_REGISTRY/dreamcloud-api:staging-latest $ECR_REGISTRY/dreamcloud-api:production-latest
+          docker push $ECR_REGISTRY/dreamcloud-api:$VERSION
+          docker push $ECR_REGISTRY/dreamcloud-api:production-latest
+          aws ecs update-service \
+            --cluster dreamcloud-production \
+            --service dreamcloud-api \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Deploy NLP
+        run: |
+          VERSION=${{ steps.tag.outputs.version }}
+          docker pull $ECR_REGISTRY/dreamcloud-nlp:staging-latest
+          docker tag $ECR_REGISTRY/dreamcloud-nlp:staging-latest $ECR_REGISTRY/dreamcloud-nlp:$VERSION
+          docker tag $ECR_REGISTRY/dreamcloud-nlp:staging-latest $ECR_REGISTRY/dreamcloud-nlp:production-latest
+          docker push $ECR_REGISTRY/dreamcloud-nlp:$VERSION
+          docker push $ECR_REGISTRY/dreamcloud-nlp:production-latest
+          aws ecs update-service \
+            --cluster dreamcloud-production \
+            --service dreamcloud-nlp \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Wait for Stable
+        run: |
+          aws ecs wait services-stable \
+            --cluster dreamcloud-production \
+            --services dreamcloud-api dreamcloud-nlp \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

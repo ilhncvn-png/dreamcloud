@@ -1,0 +1,92 @@
+name: Deploy — Staging
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+
+jobs:
+  deploy-api:
+    name: Deploy API to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag & Push API Image
+        working-directory: apps/api
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t $ECR_REGISTRY/dreamcloud-api:$IMAGE_TAG -f docker/Dockerfile .
+          docker push $ECR_REGISTRY/dreamcloud-api:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/dreamcloud-api:$IMAGE_TAG $ECR_REGISTRY/dreamcloud-api:staging-latest
+          docker push $ECR_REGISTRY/dreamcloud-api:staging-latest
+
+      - name: Deploy to ECS Staging
+        run: |
+          aws ecs update-service \
+            --cluster dreamcloud-staging \
+            --service dreamcloud-api \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Wait for Deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster dreamcloud-staging \
+            --services dreamcloud-api \
+            --region ${{ env.AWS_REGION }}
+
+  deploy-nlp:
+    name: Deploy NLP to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag & Push NLP Image
+        working-directory: apps/nlp
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t $ECR_REGISTRY/dreamcloud-nlp:$IMAGE_TAG -f docker/Dockerfile .
+          docker push $ECR_REGISTRY/dreamcloud-nlp:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/dreamcloud-nlp:$IMAGE_TAG $ECR_REGISTRY/dreamcloud-nlp:staging-latest
+          docker push $ECR_REGISTRY/dreamcloud-nlp:staging-latest
+
+      - name: Deploy to ECS Staging
+        run: |
+          aws ecs update-service \
+            --cluster dreamcloud-staging \
+            --service dreamcloud-nlp \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}

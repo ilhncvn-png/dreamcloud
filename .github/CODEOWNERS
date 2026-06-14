@@ -1,0 +1,26 @@
+# DreamCloud CODEOWNERS
+# Each line is a file pattern followed by one or more owners.
+# The last matching rule takes precedence.
+
+# Default — all team members review
+*                           @dreamcloud/core-team
+
+# API (NestJS)
+/apps/api/                  @dreamcloud/backend-team
+
+# Mobile (Expo)
+/apps/mobile/               @dreamcloud/mobile-team
+
+# NLP service (Python)
+/apps/nlp/                  @dreamcloud/backend-team @dreamcloud/nlp
+
+# Shared packages — requires all teams
+/packages/                  @dreamcloud/core-team
+
+# Infrastructure — senior approval required
+/infrastructure/            @dreamcloud/infra-lead
+/.github/workflows/         @dreamcloud/infra-lead
+
+# Security-sensitive files
+/apps/api/src/modules/auth/ @dreamcloud/backend-team @dreamcloud/security
+/infrastructure/terraform/  @dreamcloud/infra-lead @dreamcloud/security

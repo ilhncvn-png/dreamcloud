@@ -1,0 +1,58 @@
+name: CI — Mobile
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+      - '.github/workflows/ci-mobile.yml'
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck-test:
+    name: Lint, Type Check & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - run: npm ci --prefer-offline
+
+      - name: Lint
+        run: npx turbo run lint --filter=mobile...
+
+      - name: Type Check
+        run: npx turbo run type-check --filter=mobile...
+
+      - name: Unit Tests
+        run: npx turbo run test:ci --filter=mobile...
+
+  expo-check:
+    name: Expo Doctor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      - run: npm ci --prefer-offline
+      - name: Expo Doctor
+        working-directory: apps/mobile
+        run: npx expo-doctor
