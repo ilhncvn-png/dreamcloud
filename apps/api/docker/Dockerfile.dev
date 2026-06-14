@@ -14,7 +14,7 @@ COPY packages/utils/package.json ./packages/utils/
 
 RUN npm ci --workspace=apps/api --workspace=packages/shared-types \
            --workspace=packages/utils --workspace=packages/typescript-config \
-           --workspace=packages/eslint-config
+           --workspace=packages/eslint-config --ignore-scripts
 
 # Source is volume-mounted at runtime — no COPY needed
 WORKDIR /app/apps/api
