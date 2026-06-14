@@ -7,18 +7,20 @@
 > **Asla sil, her zaman güncelle.**
 
 **Son Güncelleme:** 2026-06-15  
-**Güncelleyen:** Claude Code — Sprint 1 tüm blokörleri çözüldü, build doğrulandı
+**Güncelleyen:** Claude Code — Sprint 1 TASK-001/002/003 tamamlandı, Docker ortamı doğrulandı
 
 ---
 
 ## MEVCUT DURUM
 
 ```
-AŞAMA:    Sprint 1 Hazır — Tüm Blokörler Çözüldü
-SPRINT:   1 (Başlayabilir)
+AŞAMA:    Sprint 1 — Aktif (TASK-004 bekliyor)
+SPRINT:   1 / 18
 AY:       0 / 12
-KOD:      SCAFFOLD (config + routing + health check — business logic yok)
-REPO:     YEREL (dreamcloud/ monorepo — npm install ✅, API build ✅, GitHub push bekliyor)
+KOD:      SCAFFOLD (config + routing + health check + exception filter — business logic yok)
+REPO:     GitHub'da (develop branch — 4 commit, branch koruması rehberi hazır)
+DOCKER:   ✅ Çalışıyor (postgres healthy, redis healthy, pgAdmin :5050, mailhog :8025)
+SIRADAKI: TASK-004 — TypeORM entity'leri + migration (users, user_profiles, user_settings)
 ```
 
 ---
@@ -143,44 +145,44 @@ REPO:     YEREL (dreamcloud/ monorepo — npm install ✅, API build ✅, GitHub
 
 ## DEVAM EDEN İŞLER
 
-### Sprint 1 — GitHub + Docker + AWS Kurulumu (⏳ Ekip Bekliyor)
+### Sprint 1 — Devam Eden (⏳ TASK-004 Bekliyor)
 
-Tüm blokörlere ve teknik hazırlıklara göre sıradaki adımlar:
-
-- [ ] **TASK-001:** `dreamcloud` reposunu GitHub'da oluştur, push et, branch korumaları kur
-- [ ] **TASK-003:** Docker Desktop kur, `docker compose up -d` ile servisleri başlat
-- [ ] **TASK-004:** TypeORM migrations yaz (`users`, `user_profiles`, `user_settings`)
-- [ ] **TASK-005:** GitHub Actions CI çalıştığını doğrula (PR açarak test et)
-- [ ] **TASK-006:** AWS hesabı yapılandır, Terraform ile staging ortamını kur
-- [ ] **TASK-007:** JWT RS256 key çifti üret, AWS Secrets Manager'a yükle
-- [ ] **TASK-010:** Ekip dokümantasyonunu tamamla, Sprint 2 issue'larını aç
+- [x] **TASK-001:** GitHub repo, branch protection rehberi, README.md, CONTRIBUTING.md
+- [x] **TASK-002:** NestJS API iskeleti (HttpExceptionFilter, TransformInterceptor, GET /health, Swagger /api/docs)
+- [x] **TASK-003:** Docker Compose — Node 22, api servisi eklendi; ortam doğrulandı
+- [ ] **TASK-004:** TypeORM entity'leri + migration (`users`, `user_profiles`, `user_settings`) ← **SIRADAKI**
+- [ ] **TASK-005:** GitHub Actions CI doğrulama (PR açarak)
+- [ ] **TASK-006:** AWS hesabı yapılandır, Terraform ile staging
+- [ ] **TASK-007:** JWT RS256 key üret, Secrets Manager'a yükle
+- [ ] **TASK-008:** Expo mobil iskelet (giriş ekranı statik)
+- [ ] **TASK-010:** Sprint 2 issue'larını aç
 
 ---
 
 ## SPRINT DURUMU
 
-| Sprint | Hafta | Odak                                   | Durum                   | Tamamlanma |
-| ------ | ----- | -------------------------------------- | ----------------------- | ---------- |
-| 0      | —     | Planlama + Ortam                       | ✅ Tamamlandı           | 2026-06-14 |
-| 0.5    | —     | Monorepo iskeleti + tüm blokörleri çöz | ✅ Tamamlandı           | 2026-06-15 |
-| 1      | 1–2   | Geliştirme ortamı kurulumu             | 🟢 HAZİR — Başlayabilir | —          |
-| 2      | 3–4   | Auth sistemi                           | ⏳ Bekliyor             | —          |
-| 3      | 5–6   | OAuth + Kullanıcı profili              | ⏳ Bekliyor             | —          |
-| 4      | 7–8   | Rüya CRUD                              | ⏳ Bekliyor             | —          |
-| 5      | 9–10  | NLP eşleştirme                         | ⏳ Bekliyor             | —          |
-| 6      | 11–12 | Arama + Etiket önerisi                 | ⏳ Bekliyor             | —          |
-| 7      | 13–14 | Feed + Trend                           | ⏳ Bekliyor             | —          |
-| 8      | 15–16 | Sosyal etkileşim                       | ⏳ Bekliyor             | —          |
-| 9      | 17–18 | Moderasyon                             | ⏳ Bekliyor             | —          |
-| 10     | 19–20 | Bildirim sistemi                       | ⏳ Bekliyor             | —          |
-| 11     | 21–22 | Onboarding                             | ⏳ Bekliyor             | —          |
-| 12     | 23–24 | Sosyal paylaşım                        | ⏳ Bekliyor             | —          |
-| 13     | 25–26 | Lokasyon özellikleri                   | ⏳ Bekliyor             | —          |
-| 14     | 27–28 | Performans optimizasyonu               | ⏳ Bekliyor             | —          |
-| 15     | 29–30 | Güvenlik denetimi                      | ⏳ Bekliyor             | —          |
-| 16     | 31–32 | App Store hazırlık                     | ⏳ Bekliyor             | —          |
-| 17     | 33–34 | Beta (1000 kullanıcı)                  | ⏳ Bekliyor             | —          |
-| 18     | 35–36 | Genel yayın                            | ⏳ Bekliyor             | —          |
+| Sprint | Hafta | Odak                                   | Durum                        | Tamamlanma |
+| ------ | ----- | -------------------------------------- | ---------------------------- | ---------- |
+| 0      | —     | Planlama + Ortam                       | ✅ Tamamlandı                | 2026-06-14 |
+| 0.5    | —     | Monorepo iskeleti + tüm blokörleri çöz | ✅ Tamamlandı                | 2026-06-15 |
+| 1      | 1–2   | Geliştirme ortamı kurulumu             | 🔵 Aktif — TASK-004 bekliyor | —          |
+| 2      | 3–4   | Auth sistemi                           | ⏳ Bekliyor                  | —          |
+| 3      | 5–6   | OAuth + Kullanıcı profili              | ⏳ Bekliyor                  | —          |
+| 4      | 7–8   | Rüya CRUD                              | ⏳ Bekliyor                  | —          |
+| 5      | 9–10  | NLP eşleştirme                         | ⏳ Bekliyor                  | —          |
+| 6      | 11–12 | Arama + Etiket önerisi                 | ⏳ Bekliyor                  | —          |
+| 7      | 13–14 | Feed + Trend                           | ⏳ Bekliyor                  | —          |
+| 8      | 15–16 | Sosyal etkileşim                       | ⏳ Bekliyor                  | —          |
+| 9      | 17–18 | Moderasyon                             | ⏳ Bekliyor                  | —          |
+| 10     | 19–20 | Bildirim sistemi                       | ⏳ Bekliyor                  | —          |
+| 11     | 21–22 | Onboarding                             | ⏳ Bekliyor                  | —          |
+| 12     | 23–24 | Sosyal paylaşım                        | ⏳ Bekliyor                  | —          |
+| 13     | 25–26 | Lokasyon özellikleri                   | ⏳ Bekliyor                  | —          |
+| 14     | 27–28 | Performans optimizasyonu               | ⏳ Bekliyor                  | —          |
+| 15     | 29–30 | Güvenlik denetimi                      | ⏳ Bekliyor                  | —          |
+| 16     | 31–32 | App Store hazırlık                     | ⏳ Bekliyor                  | —          |
+| 17     | 33–34 | Beta (1000 kullanıcı)                  | ⏳ Bekliyor                  | —          |
+| 18     | 35–36 | Genel yayın                            | ⏳ Bekliyor                  | —          |
 
 ---
 
@@ -242,7 +244,7 @@ Tüm blokörlere ve teknik hazırlıklara göre sıradaki adımlar:
 | Node.js | v24.16.0       | ✅ Kurulu (nvm)                         |
 | npm     | v11.13.0       | ✅ Kurulu                               |
 | Python  | 3.9.6 (sistem) | ⚠️ 3.11.8 gerekli (pyenv ile kurulacak) |
-| Docker  | —              | ❌ Henüz kurulmadı                      |
+| Docker  | 29.5.3         | ✅ Kurulu — servisler çalışıyor         |
 | AWS CLI | —              | ❌ Henüz kurulmadı                      |
 | Git     | —              | ✅ Mevcut (sistem)                      |
 
@@ -260,16 +262,17 @@ Tüm blokörlere ve teknik hazırlıklara göre sıradaki adımlar:
 
 ### Repo Durumu
 
-| Platform             | Durum                  | Not                                       |
-| -------------------- | ---------------------- | ----------------------------------------- |
-| Yerel monorepo       | ✅ İskelet oluşturuldu | `/Users/ilhanceven/Documents/dreamcloud/` |
-| GitHub Repo          | ❌ Oluşturulmadı       | TASK-001                                  |
-| main branch koruması | ❌ Ayarlanmadı         | TASK-001                                  |
-| CI/CD pipeline       | ✅ Dosyalar hazır      | GitHub'a push sonrası aktif               |
-| AWS hesabı           | ❌ Yapılandırılmadı    | TASK-006                                  |
-| Staging ortamı       | ❌ Oluşturulmadı       | TASK-006                                  |
-| npm install          | ✅ Çalışıyor           | 1821 paket, 0 hata                        |
-| turbo build (API)    | ✅ Başarılı            | 0 TypeScript hatası                       |
+| Platform             | Durum                  | Not                                         |
+| -------------------- | ---------------------- | ------------------------------------------- |
+| Yerel monorepo       | ✅ İskelet oluşturuldu | `/Users/ilhanceven/Documents/dreamcloud/`   |
+| GitHub Repo          | ✅ Oluşturuldu         | github.com/ilhncvn-png/dreamcloud (private) |
+| main branch koruması | ⏳ Manuel gerekli      | docs/GITHUB_SETUP.md rehberi hazır          |
+| CI/CD pipeline       | ✅ Dosyalar hazır      | develop push edildi, CI tetikleniyor        |
+| AWS hesabı           | ❌ Yapılandırılmadı    | TASK-006                                    |
+| Staging ortamı       | ❌ Oluşturulmadı       | TASK-006                                    |
+| npm install          | ✅ Çalışıyor           | 1821 paket, 0 hata                          |
+| turbo build (API)    | ✅ Başarılı            | 0 TypeScript hatası, 0 lint hatası          |
+| Docker servisler     | ✅ Çalışıyor           | postgres:5432, redis:6379, pgAdmin:5050     |
 
 ---
 
@@ -285,11 +288,12 @@ _Henüz veri yok — yayın sonrası güncellenecek._
 
 ## GÜNCELLEME GEÇMİŞİ
 
-| Tarih      | Güncelleyen | Değişiklik                                                                                                              |
-| ---------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 2026-06-14 | Claude Code | İlk oluşturma — başlangıç durumu                                                                                        |
-| 2026-06-14 | Claude Code | Monorepo iskeleti tamamlandı, Readiness Check sonuçları işlendi                                                         |
-| 2026-06-15 | Claude Code | Tüm Sprint 1 blokörleri çözüldü: API config/Docker/Husky/ESLint/Mobile routes/NLP 6 dosya, npm install ✅, API build ✅ |
+| Tarih      | Güncelleyen | Değişiklik                                                                                                                                                                  |
+| ---------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-14 | Claude Code | İlk oluşturma — başlangıç durumu                                                                                                                                            |
+| 2026-06-14 | Claude Code | Monorepo iskeleti tamamlandı, Readiness Check sonuçları işlendi                                                                                                             |
+| 2026-06-15 | Claude Code | Tüm Sprint 1 blokörleri çözüldü: API config/Docker/Husky/ESLint/Mobile routes/NLP 6 dosya, npm install ✅, API build ✅                                                     |
+| 2026-06-15 | Claude Code | TASK-001/002/003 tamamlandı: GitHub push, NestJS filter+interceptor+health, Docker Node22+api servisi; Docker ortamı doğrulandı (postgres/redis healthy, extensions kurulu) |
 
 ---
 
