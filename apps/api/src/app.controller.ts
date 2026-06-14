@@ -1,19 +1,24 @@
 import { Controller, Get } from '@nestjs/common';
-import { HealthCheck, HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BypassTransform } from './common/decorators/bypass-transform.decorator';
+
+export interface HealthResponse {
+  status: 'ok';
+  timestamp: string;
+  version: string;
+}
 
 @ApiTags('health')
 @Controller()
+@BypassTransform()
 export class AppController {
-  constructor(
-    private readonly health: HealthCheckService,
-    private readonly db: TypeOrmHealthIndicator,
-  ) {}
-
   @Get('health')
-  @ApiOperation({ summary: 'Service health check' })
-  @HealthCheck()
-  check() {
-    return this.health.check([() => this.db.pingCheck('database')]);
+  @ApiOperation({ summary: 'Liveness probe — always returns 200 when the process is alive' })
+  check(): HealthResponse {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      version: process.env['npm_package_version'] ?? '0.1.0',
+    };
   }
 }

@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { TerminusModule } from '@nestjs/terminus';
 import configuration from './config/configuration';
 import jwtConfig from './config/jwt.config';
 import redisConfig from './config/redis.config';
@@ -51,7 +50,6 @@ import { ModerationModule } from './modules/moderation/moderation.module';
       }),
     }),
 
-    TerminusModule,
     AuthModule,
     DreamsModule,
     UsersModule,
