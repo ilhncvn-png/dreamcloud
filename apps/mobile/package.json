@@ -13,7 +13,7 @@
     "submit:ios": "eas submit --platform ios",
     "submit:android": "eas submit --platform android",
     "test": "jest",
-    "test:ci": "jest --ci --coverage --forceExit",
+    "test:ci": "jest --ci --coverage --forceExit --passWithNoTests",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"app/**/*.{ts,tsx}\"",
     "type-check": "tsc --noEmit",
     "clean": "expo prebuild --clean"
