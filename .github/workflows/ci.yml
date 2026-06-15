@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '22.x'
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
@@ -40,10 +40,10 @@ jobs:
       - run: npm ci --prefer-offline
 
       - name: Lint
-        run: npx turbo run lint --filter=api...
+        run: npx turbo run lint --filter=@dreamcloud/api
 
       - name: Type Check
-        run: npx turbo run type-check --filter=api...
+        run: npx turbo run type-check --filter=@dreamcloud/api
 
   test:
     name: Unit & Integration Tests
@@ -99,7 +99,7 @@ jobs:
         run: npm run migration:run
 
       - name: Run Tests
-        run: npx turbo run test:ci --filter=api...
+        run: npx turbo run test:ci --filter=@dreamcloud/api
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v4

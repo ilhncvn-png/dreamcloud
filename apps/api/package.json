@@ -80,7 +80,13 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s",
       "!**/*.module.ts",
-      "!**/main.ts"
+      "!**/main.ts",
+      "!**/*.entity.ts",
+      "!**/*.decorator.ts",
+      "!**/migrations/**",
+      "!**/config/**",
+      "!**/enums/**",
+      "!**/database/data-source.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
