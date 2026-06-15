@@ -16,6 +16,18 @@ out/
 *.js.map
 *.d.ts.map
 
+# Compiled TypeScript artifacts in source directories (nest start / tsc side-effects)
+apps/api/src/**/*.js
+apps/api/src/**/*.d.ts
+apps/api/test/**/*.js
+apps/api/test/**/*.d.ts
+apps/mobile/app/**/*.js
+apps/mobile/app/**/*.d.ts
+apps/mobile/src/**/*.js
+apps/mobile/src/**/*.d.ts
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+
 # ── Turbo cache ───────────────────────────────────────────
 .turbo/
 

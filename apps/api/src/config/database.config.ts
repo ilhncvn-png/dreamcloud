@@ -1,6 +1,7 @@
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { config } from 'dotenv';
 import * as path from 'path';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -14,6 +15,7 @@ export const dataSourceOptions: DataSourceOptions = {
   synchronize: false,
   logging: process.env['NODE_ENV'] === 'development',
   ssl: process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false,
+  namingStrategy: new SnakeNamingStrategy(),
   extra: {
     max: isTest ? 2 : parseInt(process.env['DATABASE_POOL_SIZE'] ?? '10', 10),
   },

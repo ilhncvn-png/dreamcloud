@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import configuration from './config/configuration';
 import jwtConfig from './config/jwt.config';
 import redisConfig from './config/redis.config';
@@ -31,6 +32,7 @@ import { ModerationModule } from './modules/moderation/moderation.module';
         url: config.get<string>('database.url') ?? '',
         autoLoadEntities: true,
         synchronize: false,
+        namingStrategy: new SnakeNamingStrategy(),
         poolSize: config.get<number>('database.poolSize', 10),
         ssl: config.get<boolean>('database.ssl') ? { rejectUnauthorized: false } : false,
         logging: config.get<string>('nodeEnv') === 'development',
