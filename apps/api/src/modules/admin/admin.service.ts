@@ -3095,7 +3095,7 @@ export class AdminService {
         emotion:   r.emotion,
         count:     Number(r.count),
         pct:       Math.round(Number(r.count) / total * 100),
-        type:      (POS.includes(r.emotion) ? 'positive' : NEG.includes(r.emotion) ? 'negative' : 'neutral'),
+        type:      (POS.includes(r.emotion) ? 'positive' : NEG.includes(r.emotion) ? 'negative' : 'neutral') as 'positive' | 'negative' | 'neutral',
         trend24h:  tr,
         dominance,
       };
@@ -3181,7 +3181,7 @@ export class AdminService {
           .map(([e2, co]) => ({
             emotion:   e2,
             strength:  Math.round((co / maxCo) * 100),
-            direction: (POS.includes(em) === POS.includes(e2) ? 'positive' : 'negative'),
+            direction: (POS.includes(em) === POS.includes(e2) ? 'positive' : 'negative') as 'positive' | 'negative',
           }))
           .sort((a, b) => b.strength - a.strength)
           .slice(0, 4),
@@ -3232,7 +3232,7 @@ export class AdminService {
     });
 
     // ── New computed fields ──────────────────────────────────────────────────
-    const hRow = histRows[0] ?? {};
+    const hRow = (histRows[0] ?? {}) as Record<string, unknown>;
     const p30Pct = Number(hRow.p30tot) > 0 ? Math.round(Number(hRow.p30pos) / Number(hRow.p30tot) * 100) : posPct;
     const p90Pct = Number(hRow.p90tot) > 0 ? Math.round(Number(hRow.p90pos) / Number(hRow.p90tot) * 100) : posPct;
     const allPct = Number(hRow.alltot)  > 0 ? Math.round(Number(hRow.allpos)  / Number(hRow.alltot)  * 100) : posPct;
@@ -3516,11 +3516,11 @@ export class AdminService {
       const curr  = Number(em.count);
       const prev  = Number(emPrevRows.find((p: { emotion: string; count: string }) => p.emotion === em.emotion)?.count ?? Math.max(1, curr * 0.9));
       const ratio = curr / Math.max(prev, 1);
-      const state = ratio > 1.4 ? 'accelerating' : ratio > 1.15 ? 'growing' : ratio > 0.85 ? 'stable' : ratio > 0.6 ? 'fading' : 'collapsing';
+      const state: 'accelerating' | 'growing' | 'stable' | 'fading' | 'collapsing' = ratio > 1.4 ? 'accelerating' : ratio > 1.15 ? 'growing' : ratio > 0.85 ? 'stable' : ratio > 0.6 ? 'fading' : 'collapsing';
       return {
         subject: em.emotion, subjectTR: EMOTION_TR_MAP[em.emotion] ?? em.emotion,
         state: state,
-        stateTR: MOMENTUM_STATE_TR[state],
+        stateTR: MOMENTUM_STATE_TR[state] ?? state,
         confidence: Math.min(88, 55 + Math.round(Math.abs(ratio - 1) * 50)),
         emoji: EMOTION_EMOJI_MAP[em.emotion] ?? '🌙',
         valueCurr: curr, valuePrev: prev,
@@ -3557,11 +3557,11 @@ export class AdminService {
         confidence: Math.min(92, 52 + Math.round(ratio * 18)),
         expectedArrival: i === 0 ? '24 Saat' : i === 1 ? '2 Gün' : `${i + 2} Gün`,
         estimatedLifetime: i < 2 ? '7+ Gün' : '3-5 Gün',
-        emotion: fk ? SYM_EMO[fk] : POS[i % POS.length],
+        emotion: fk ? (SYM_EMO[fk] ?? '') : (POS[i % POS.length] ?? ''),
         emoji:   fk ? SYM_EMOJI[fk] ?? '✨' : '✨',
       };
     });
-    while (emergingSymbols.length < 5) emergingSymbols.push(DEFAULT_EMERGING[emergingSymbols.length]);
+    while (emergingSymbols.length < 5) emergingSymbols.push(DEFAULT_EMERGING[emergingSymbols.length]!);
 
     const predictionAccuracy = [
       { prediction:`Pozitif duygu +${Math.max(3,Math.abs(eDelta))}%`, expected:`+${Math.max(3,Math.abs(eDelta))}%`, result:`+${Math.max(3,Math.abs(eDelta))+2}%`, accuracy:94, correct:true },
