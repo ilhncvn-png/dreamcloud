@@ -51,7 +51,6 @@ import { BusinessModule } from './modules/business/business.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const nodeEnv = config.get<string>('nodeEnv') ?? 'development';
-        const isDeployed = nodeEnv === 'production' || nodeEnv === 'staging';
         return {
           type: 'postgres' as const,
           url: config.get<string>('database.url') ?? '',
@@ -61,11 +60,7 @@ import { BusinessModule } from './modules/business/business.module';
           poolSize: config.get<number>('database.poolSize', 10),
           ssl: config.get<boolean>('database.ssl') ? { rejectUnauthorized: false } : false,
           logging: nodeEnv === 'development',
-          // Automatically run pending migrations at startup in deployed environments.
-          // Migrations complete before any onModuleInit lifecycle hooks run,
-          // so all tables exist by the time services try to query them.
           migrations: [path.join(__dirname, 'database', 'migrations', '*{.ts,.js}')],
-          migrationsRun: isDeployed,
         };
       },
     }),

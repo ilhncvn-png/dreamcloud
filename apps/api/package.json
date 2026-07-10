@@ -4,6 +4,7 @@
   "description": "DreamCloud NestJS API",
   "private": true,
   "scripts": {
+    "prebuild": "npm run clean",
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main",
