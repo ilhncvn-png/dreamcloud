@@ -110,3 +110,28 @@ apps/nlp/models/
 *.tgz
 .cache/
 .eslintcache
+
+# ── Local backups (NEVER commit — contains secrets, keys, DB dumps) ──────
+backups/
+*.sql
+*.sql.gz
+*.dump
+
+# ── User uploaded media (use S3/R2 in production) ────────────────────────
+apps/api/uploads/
+
+# ── NLP service local env ─────────────────────────────────────────────────
+apps/nlp/.env
+apps/nlp/.env.local
+
+# ── Admin panel env (current and future) ──────────────────────────────────
+apps/admin/.env
+apps/admin/.env.local
+apps/admin/.env.staging
+apps/admin/.env.production
+
+# ── Web app env (future Next.js) ──────────────────────────────────────────
+apps/web/.env
+apps/web/.env.local
+apps/web/.env.staging
+apps/web/.env.production
