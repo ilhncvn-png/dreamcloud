@@ -7,20 +7,21 @@
 > **Asla sil, her zaman güncelle.**
 
 **Son Güncelleme:** 2026-06-15  
-**Güncelleyen:** Claude Code — Sprint 1 TASK-001/002/003 tamamlandı, Docker ortamı doğrulandı
+**Güncelleyen:** Claude Code — TASK-008 tamamlandı; Expo Go üzerinde Login + Feed çalışıyor
 
 ---
 
 ## MEVCUT DURUM
 
 ```
-AŞAMA:    Sprint 1 — Aktif (TASK-004 bekliyor)
-SPRINT:   1 / 18
+AŞAMA:    Sprint 2 — Aktif (TASK-012 başlayacak)
+SPRINT:   2 / 18
 AY:       0 / 12
-KOD:      SCAFFOLD (config + routing + health check + exception filter — business logic yok)
-REPO:     GitHub'da (develop branch — 4 commit, branch koruması rehberi hazır)
+KOD:      MVP_CORE (Auth + Dreams CRUD backend tam, Expo mobile iskelet + auth flow çalışıyor)
+REPO:     GitHub'da (develop branch)
 DOCKER:   ✅ Çalışıyor (postgres healthy, redis healthy, pgAdmin :5050, mailhog :8025)
-SIRADAKI: TASK-004 — TypeORM entity'leri + migration (users, user_profiles, user_settings)
+MOBILE:   ✅ Expo Go'da açıldı (Login + Feed ekranı, JWT auth, SecureStore token)
+SIRADAKI: TASK-012 — Mobil Dreams Feed (gerçek veri), TASK-013 — Create Dream, TASK-014 — Dream Detail
 ```
 
 ---
@@ -154,8 +155,12 @@ SIRADAKI: TASK-004 — TypeORM entity'leri + migration (users, user_profiles, us
 - [ ] **TASK-005:** GitHub Actions CI doğrulama (PR açarak)
 - [ ] **TASK-006:** AWS hesabı yapılandır, Terraform ile staging
 - [ ] **TASK-007:** JWT RS256 key üret, Secrets Manager'a yükle
-- [ ] **TASK-008:** Expo mobil iskelet (giriş ekranı statik)
+- [x] **TASK-008:** Expo mobil iskelet — Login + Register + Feed + Auth guard + Zustand + SecureStore ✅ (Expo Go'da doğrulandı)
 - [ ] **TASK-010:** Sprint 2 issue'larını aç
+- [ ] **TASK-011:** Dreams CRUD modülü (backend) — entity, migration, 6 endpoint ✅ doğrulandı
+- [ ] **TASK-012:** Mobil Dreams Feed — GET /dreams/me ile gerçek veri, DreamCard, pull-to-refresh ← **SIRADAKI**
+- [ ] **TASK-013:** Create Dream Ekranı — form, POST /dreams, kategori/görünürlük seçimi
+- [ ] **TASK-014:** Dream Detail Ekranı — GET /dreams/:id, düzenle/sil aksiyonları
 
 ---
 
@@ -288,12 +293,14 @@ _Henüz veri yok — yayın sonrası güncellenecek._
 
 ## GÜNCELLEME GEÇMİŞİ
 
-| Tarih      | Güncelleyen | Değişiklik                                                                                                                                                                  |
-| ---------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-06-14 | Claude Code | İlk oluşturma — başlangıç durumu                                                                                                                                            |
-| 2026-06-14 | Claude Code | Monorepo iskeleti tamamlandı, Readiness Check sonuçları işlendi                                                                                                             |
-| 2026-06-15 | Claude Code | Tüm Sprint 1 blokörleri çözüldü: API config/Docker/Husky/ESLint/Mobile routes/NLP 6 dosya, npm install ✅, API build ✅                                                     |
-| 2026-06-15 | Claude Code | TASK-001/002/003 tamamlandı: GitHub push, NestJS filter+interceptor+health, Docker Node22+api servisi; Docker ortamı doğrulandı (postgres/redis healthy, extensions kurulu) |
+| Tarih      | Güncelleyen | Değişiklik                                                                                                                                                                               |
+| ---------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-14 | Claude Code | İlk oluşturma — başlangıç durumu                                                                                                                                                         |
+| 2026-06-14 | Claude Code | Monorepo iskeleti tamamlandı, Readiness Check sonuçları işlendi                                                                                                                          |
+| 2026-06-15 | Claude Code | Tüm Sprint 1 blokörleri çözüldü: API config/Docker/Husky/ESLint/Mobile routes/NLP 6 dosya, npm install ✅, API build ✅                                                                  |
+| 2026-06-15 | Claude Code | TASK-001/002/003 tamamlandı: GitHub push, NestJS filter+interceptor+health, Docker Node22+api servisi; Docker ortamı doğrulandı (postgres/redis healthy, extensions kurulu)              |
+| 2026-06-15 | Claude Code | TASK-011 tamamlandı: Dreams CRUD (6 endpoint), lint fix, migration çalıştı, soft delete doğrulandı                                                                                       |
+| 2026-06-15 | Claude Code | TASK-008 tamamlandı: Expo mobile iskelet — Login/Register/Feed, Zustand auth, SecureStore, JWT interceptor, SDK 54 upgrade (expo-router v6, RN 0.81.5, React 19) — Expo Go'da doğrulandı |
 
 ---
 
