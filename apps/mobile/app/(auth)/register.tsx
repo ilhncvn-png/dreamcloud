@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   Pressable,
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -86,6 +88,11 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
+            <Image
+              source={require('../../assets/images/logo-colored.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.title}>Hesap Oluştur</Text>
             <Text style={styles.subtitle}>Rüya yolculuğuna başla</Text>
           </View>
@@ -190,6 +197,8 @@ export default function RegisterScreen() {
                 void handleSubmit(onSubmit)();
               }}
               disabled={isSubmitting}
+              accessibilityRole="button"
+              accessibilityLabel="Kayıt ol"
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -197,6 +206,19 @@ export default function RegisterScreen() {
                 <Text style={styles.primaryButtonText}>Kayıt Ol</Text>
               )}
             </Pressable>
+
+            {/* Legal */}
+            <View style={styles.legalRow}>
+              <Text style={styles.legalText}>Kayıt olarak </Text>
+              <Pressable onPress={() => { void Linking.openURL('https://dreamcloud.app/terms'); }}>
+                <Text style={styles.legalLink}>Kullanım Koşulları</Text>
+              </Pressable>
+              <Text style={styles.legalText}>'nı ve </Text>
+              <Pressable onPress={() => { void Linking.openURL('https://dreamcloud.app/privacy'); }}>
+                <Text style={styles.legalLink}>Gizlilik Politikası</Text>
+              </Pressable>
+              <Text style={styles.legalText}>'nı kabul etmiş olursunuz.</Text>
+            </View>
 
             <Link href="/(auth)/login" asChild>
               <Pressable style={styles.linkButton}>
@@ -216,7 +238,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: 24 },
 
-  header: { paddingTop: 48, paddingBottom: 32 },
+  header: { paddingTop: 40, paddingBottom: 32 },
+  logo: { width: 140, height: 56, marginBottom: 16, borderRadius: 12 },
   title: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary, marginBottom: 6 },
   subtitle: { fontSize: 15, color: Colors.textSecondary },
 
@@ -255,6 +278,16 @@ const styles = StyleSheet.create({
   },
   primaryButtonDisabled: { opacity: 0.6 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+
+  legalRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    gap: 0,
+  },
+  legalText: { color: Colors.textMuted, fontSize: 12, lineHeight: 18 },
+  legalLink: { color: Colors.primary, fontSize: 12, fontWeight: '600', lineHeight: 18 },
 
   linkButton: { flexDirection: 'row', justifyContent: 'center', paddingVertical: 8 },
   linkText: { color: Colors.textSecondary, fontSize: 14 },

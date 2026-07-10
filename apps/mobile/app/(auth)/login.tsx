@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   Pressable,
   StyleSheet,
@@ -71,8 +72,11 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <Text style={styles.logo}>🌙</Text>
-            <Text style={styles.brand}>DreamCloud</Text>
+            <Image
+              source={require('../../assets/images/logo-colored.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.tagline}>Rüyalarını dünyayla paylaş</Text>
           </View>
 
@@ -125,6 +129,12 @@ export default function LoginScreen() {
               {errors.password && <Text style={styles.fieldError}>{errors.password.message}</Text>}
             </View>
 
+            <Link href="/(auth)/forgot-password" asChild>
+              <Pressable style={styles.forgotPasswordButton}>
+                <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
+              </Pressable>
+            </Link>
+
             <Pressable
               style={[styles.primaryButton, isSubmitting && styles.primaryButtonDisabled]}
               onPress={() => {
@@ -163,8 +173,7 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: 24 },
 
   header: { alignItems: 'center', paddingTop: 60, paddingBottom: 40 },
-  logo: { fontSize: 56, marginBottom: 12 },
-  brand: { fontSize: 32, fontWeight: '700', color: Colors.textPrimary, letterSpacing: 0.5 },
+  logo: { width: 180, height: 72, marginBottom: 8, borderRadius: 16 },
   tagline: { fontSize: 15, color: Colors.textSecondary, marginTop: 6, textAlign: 'center' },
 
   form: { paddingBottom: 32, gap: 16 },
@@ -202,6 +211,9 @@ const styles = StyleSheet.create({
   },
   primaryButtonDisabled: { opacity: 0.6 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+
+  forgotPasswordButton: { alignSelf: 'flex-end', paddingVertical: 2 },
+  forgotPasswordText: { color: Colors.primary, fontSize: 13, fontWeight: '500' },
 
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },

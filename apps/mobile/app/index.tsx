@@ -1,10 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '@/store/auth.store';
 
 export default function Index() {
   const { isAuthenticated, isLoading } = useAuthStore();
+  const [storageChecked, setStorageChecked] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
-  if (isLoading) return null;
+  useEffect(() => {
+    SecureStore.getItemAsync('onboarding_done')
+      .then(val => {
+        setOnboardingDone(val === 'true');
+        setStorageChecked(true);
+      })
+      .catch(() => {
+        // If SecureStore fails, skip onboarding rather than blocking the user
+        setOnboardingDone(true);
+        setStorageChecked(true);
+      });
+  }, []);
 
-  return isAuthenticated ? <Redirect href="/(tabs)" /> : <Redirect href="/(auth)/login" />;
+  if (isLoading || !storageChecked) return null;
+  if (!isAuthenticated) return <Redirect href="/(auth)/login" />;
+  if (!onboardingDone) return <Redirect href="/onboarding" />;
+  return <Redirect href="/(tabs)" />;
 }

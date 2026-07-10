@@ -27,10 +27,13 @@ function AuthGuard() {
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!isAuthenticated && !inAuthGroup) {
+    const inOnboarding = segments[0] === 'onboarding';
+
+    if (!isAuthenticated && !inAuthGroup && !inOnboarding) {
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)');
+      // Route through index so it can decide: onboarding vs tabs
+      router.replace('/');
     }
   }, [isAuthenticated, isLoading, segments, router]);
 
