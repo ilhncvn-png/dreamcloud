@@ -39,6 +39,9 @@ export class UserProfile {
   @Column({ type: 'boolean', default: true })
   isPublic: boolean;
 
+  @Column({ type: 'jsonb', default: {} })
+  preferences: Record<string, unknown>;
+
   @Column({ type: 'int', default: 0 })
   dreamCount: number;
 

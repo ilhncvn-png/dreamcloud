@@ -17,12 +17,20 @@ export enum DreamVisibility {
 }
 
 export enum NotificationType {
-  DREAM_MATCH = 'dream_match',
-  LIKE = 'like',
-  COMMENT = 'comment',
-  FOLLOW = 'follow',
-  INTERPRETATION = 'interpretation',
-  SYSTEM = 'system',
+  DREAM_MATCH      = 'dream_match',
+  DREAM_CONNECTION = 'dream_connection',
+  SHARED_SYMBOL    = 'shared_symbol',
+  SHARED_LOCATION  = 'shared_location',
+  HIGH_RESONANCE   = 'high_resonance',
+  SIGNAL_TRENDING  = 'signal_trending',
+  DREAM_MILESTONE  = 'dream_milestone',
+  DREAM_MENTION    = 'dream_mention',
+  LIKE             = 'like',
+  SAVE             = 'save',
+  COMMENT          = 'comment',
+  FOLLOW           = 'follow',
+  INTERPRETATION   = 'interpretation',
+  SYSTEM           = 'system',
 }
 
 export enum ReportReason {
@@ -52,4 +60,12 @@ export enum TagType {
   EMOTION = 'emotion',
   BRAND = 'brand',
   OTHER = 'other',
+}
+
+export enum AnalysisStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  SKIPPED = 'skipped',
 }

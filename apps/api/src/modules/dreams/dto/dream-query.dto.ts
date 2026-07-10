@@ -1,9 +1,26 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 import { DreamCategory, DreamVisibility } from '../../../common/enums/database.enums';
 
+export enum DreamSort {
+  NEWEST = 'newest',
+  MOST_LIKED = 'most_liked',
+  MOST_SAVED = 'most_saved',
+  MOST_COMMENTED = 'most_commented',
+}
+
 export class DreamQueryDto {
+  @ApiPropertyOptional({ description: 'Cursor for mobile pagination (ignored server-side)' })
+  @IsOptional()
+  @IsString()
+  cursor?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by user ID (public dreams only)' })
+  @IsOptional()
+  @IsUUID()
+  userId?: string;
+
   @ApiPropertyOptional({ default: 1, minimum: 1 })
   @IsOptional()
   @Type(() => Number)
@@ -28,6 +45,11 @@ export class DreamQueryDto {
   @IsOptional()
   @IsEnum(DreamVisibility)
   visibility?: DreamVisibility;
+
+  @ApiPropertyOptional({ enum: DreamSort, description: 'Sort order for public feed' })
+  @IsOptional()
+  @IsEnum(DreamSort)
+  sort?: DreamSort;
 }
 
 export interface PaginationMeta {

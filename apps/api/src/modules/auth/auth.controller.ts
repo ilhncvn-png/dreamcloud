@@ -3,9 +3,11 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthTokensDto, RefreshTokenBodyDto } from './dto/auth-tokens.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { MeResponseDto } from './dto/me-response.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { JwtPayload } from './strategies/jwt.strategy';
 
@@ -40,6 +42,22 @@ export class AuthController {
   @ApiOperation({ summary: 'Revoke the refresh token' })
   logout(@Body() dto: RefreshTokenBodyDto): Promise<void> {
     return this.authService.logout(dto.refreshToken);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send a password reset code to the given email' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    await this.authService.forgotPassword(dto.email);
+    return { message: 'Şifre sıfırlama kodu e-posta adresinize gönderildi.' };
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password using the code received by email' })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    await this.authService.resetPassword(dto.email, dto.code, dto.newPassword);
+    return { message: 'Şifreniz başarıyla güncellendi.' };
   }
 
   @Get('me')

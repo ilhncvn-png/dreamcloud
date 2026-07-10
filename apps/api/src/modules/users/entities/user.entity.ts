@@ -10,7 +10,7 @@ import {
 import { UserProfile } from './user-profile.entity';
 import { UserSettings } from './user-settings.entity';
 
-export type UserRole = 'user' | 'moderator' | 'admin';
+export type UserRole = 'user' | 'moderator' | 'admin' | 'super_admin';
 
 @Entity('users')
 export class User {
@@ -43,6 +43,12 @@ export class User {
 
   @Column({ type: 'timestamptz', nullable: true })
   lastLoginAt: Date | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  passwordResetToken: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  passwordResetExpiry: Date | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

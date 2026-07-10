@@ -1,5 +1,10 @@
 import { createHash, randomBytes } from 'crypto';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,6 +19,7 @@ import { RegisterDto } from './dto/register.dto';
 import type { JwtPayload } from './strategies/jwt.strategy';
 
 const BCRYPT_ROUNDS = 12;
+const OTP_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
 
 @Injectable()
 export class AuthService {
@@ -23,6 +29,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokensDto> {
@@ -37,18 +45,25 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<AuthTokensDto> {
     const user = await this.usersService.findByEmail(dto.email.toLowerCase());
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      throw new UnauthorizedException('Bu e-posta adresine kayıtlı bir hesap bulunamadı.');
+    }
 
-    if (!user.isActive) throw new UnauthorizedException('Account is deactivated');
+    if (!user.isActive) {
+      throw new UnauthorizedException('Hesabınız devre dışı bırakılmış. Destek ekibiyle iletişime geçin.');
+    }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new UnauthorizedException(`Account locked until ${user.lockedUntil.toISOString()}`);
+      const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+      throw new UnauthorizedException(
+        `Çok fazla başarısız giriş denemesi. Hesabınız ${minutesLeft} dakika boyunca kilitlendi.`,
+      );
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash ?? '');
     if (!passwordValid) {
       await this.usersService.recordFailedLogin(user.id);
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Şifre hatalı. Lütfen tekrar deneyin.');
     }
 
     await this.usersService.updateLastLogin(user.id);
@@ -79,6 +94,53 @@ export class AuthService {
     const user = await this.usersService.findById(userId);
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email.toLowerCase());
+    // Always return success to prevent user enumeration
+    if (!user || !user.isActive) return;
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeHash = this.hashToken(code);
+    const expiry = new Date(Date.now() + OTP_EXPIRY_MS);
+
+    await this.userRepo.update(user.id, {
+      passwordResetToken: codeHash,
+      passwordResetExpiry: expiry,
+    });
+
+    // In production, send via SES. In development, log to console.
+    if (process.env['NODE_ENV'] !== 'production') {
+      console.log(`[DEV] Password reset code for ${email}: ${code}`);
+    }
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email.toLowerCase());
+    if (!user) throw new BadRequestException('Geçersiz veya süresi dolmuş kod.');
+
+    if (
+      !user.passwordResetToken ||
+      !user.passwordResetExpiry ||
+      user.passwordResetExpiry < new Date()
+    ) {
+      throw new BadRequestException('Geçersiz veya süresi dolmuş kod.');
+    }
+
+    const codeHash = this.hashToken(code);
+    if (codeHash !== user.passwordResetToken) {
+      throw new BadRequestException('Geçersiz veya süresi dolmuş kod.');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await this.userRepo.update(user.id, {
+      passwordHash,
+      passwordResetToken: null,
+      passwordResetExpiry: null,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    });
   }
 
   private async issueTokens(user: User): Promise<AuthTokensDto> {
