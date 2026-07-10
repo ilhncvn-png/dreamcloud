@@ -12,7 +12,7 @@
  */
 
 import 'reflect-metadata';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import type { DataSource } from 'typeorm';
 import AppDataSource from '../../config/database.config';

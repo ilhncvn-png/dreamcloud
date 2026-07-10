@@ -6,8 +6,13 @@
 > Her sprint sonunda veya önemli bir karar alındığında güncellenmelidir.
 > **Asla sil, her zaman güncelle.**
 
-**Son Güncelleme:** 2026-06-15  
-**Güncelleyen:** Claude Code — TASK-008 tamamlandı; Expo Go üzerinde Login + Feed çalışıyor
+**Son Güncelleme:** 2026-07-10  
+**Güncelleyen:** Claude Code — Phase 1F: Railway log flood düzeltildi, healthcheck stabilize edildi
+
+### Railway Staging (Phase 1F — 2026-07-10)
+- NestJS logger production/staging modunda `['error','warn']`'a indirildi; `[RouterExplorer]` route mapping log'ları artık Railway'e gönderilmiyor
+- `/health` (root) ve `/api/v1/health` (versiyonlu) her ikisi de aktif, DB/Redis bağımsız 200 dönüyor
+- native `bcrypt` → `bcryptjs` (saf JS, no `.node` binding) ile değiştirildi
 
 ---
 

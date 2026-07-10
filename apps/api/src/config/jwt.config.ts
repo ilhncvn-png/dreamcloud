@@ -14,7 +14,9 @@ function loadKey(
     return fs.readFileSync(path.resolve(process.cwd(), keyPath), 'utf-8');
   } catch {
     if (process.env['NODE_ENV'] === 'production') {
-      throw new Error(`JWT key not found at: ${keyPath}`);
+      // Warn but don't throw — app must start for /health to respond.
+      // Set JWT_PRIVATE_KEY / JWT_PUBLIC_KEY env vars in Railway.
+      console.warn(`[JWT] Key not found at ${keyPath}. Auth endpoints will not work until JWT env vars are set.`);
     }
     return '';
   }

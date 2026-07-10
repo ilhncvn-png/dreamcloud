@@ -7,13 +7,26 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
+  const isProd = process.env['NODE_ENV'] === 'production' || process.env['NODE_ENV'] === 'staging';
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: process.env['NODE_ENV'] !== 'production' }),
+    new FastifyAdapter({ logger: !isProd }),
+    {
+      // Suppress [RouterExplorer], [InstanceLoader], [RoutesResolver] in Railway —
+      // those flood Railway's log rate limit during startup.
+      logger: isProd ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug', 'verbose'],
+    },
   );
 
-  // /health is a liveness probe — no version or api prefix
-  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+  // Both /health and /api/v1/health are excluded from the global prefix so they
+  // can be served at their literal paths without an extra api/v1 prepended.
+  app.setGlobalPrefix('api/v1', { exclude: ['health', 'api/v1/health'] });
+
+  const defaultOrigins = ['http://localhost:4000', 'http://localhost:8081', 'http://localhost:19006'];
+  const corsOrigins = process.env['CORS_ORIGINS']
+    ? process.env['CORS_ORIGINS'].split(',').map((o) => o.trim()).filter(Boolean)
+    : defaultOrigins;
 
   const defaultOrigins = ['http://localhost:4000', 'http://localhost:8081', 'http://localhost:19006'];
   const corsOrigins = process.env['CORS_ORIGINS']
@@ -51,6 +64,10 @@ async function bootstrap() {
 
   const port = parseInt(process.env['PORT'] ?? '3000', 10);
   await app.listen(port, '0.0.0.0');
+
+  console.log(`DreamCloud API listening on 0.0.0.0:${port}`);
+  console.log(`NODE_ENV: ${process.env['NODE_ENV'] ?? 'development'}`);
+  console.log(`Healthcheck available at /health`);
 }
 
 void bootstrap();

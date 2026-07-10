@@ -40,7 +40,12 @@ export class ClustersService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.seedClusters();
+    try {
+      await this.seedClusters();
+    } catch (err) {
+      // Migrations may not have run yet in some environments; log and continue.
+      this.logger.warn('seedClusters skipped on init — table may not exist yet', err);
+    }
   }
 
   // ─── Seed predefined cluster rows ──────────────────────────────────────────
