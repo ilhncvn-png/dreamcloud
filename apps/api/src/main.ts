@@ -51,6 +51,10 @@ async function bootstrap() {
 
   const port = parseInt(process.env['PORT'] ?? '3000', 10);
   await app.listen(port, '0.0.0.0');
+
+  console.log(`DreamCloud API listening on 0.0.0.0:${port}`);
+  console.log(`NODE_ENV: ${process.env['NODE_ENV'] ?? 'development'}`);
+  console.log(`Healthcheck available at /health`);
 }
 
 void bootstrap();
