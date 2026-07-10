@@ -27,6 +27,7 @@
     "seed:v2": "ts-node src/database/seeds/run.seed.v2.ts",
     "seed:dreamcloud": "ts-node src/database/seeds/seed.dreamcloud.ts",
     "seed:reset": "ts-node src/database/seeds/reset.seed.dreamcloud.ts",
+    "seed:staging": "ALLOW_SEED=true ts-node -P tsconfig.json src/database/seeds/seed.staging.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

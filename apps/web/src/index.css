@@ -1,0 +1,18 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #03020d;
+  --surface: #07061a;
+  --accent: #7b6fff;
+  --accent-dim: rgba(123, 111, 255, 0.15);
+  --text: rgba(232, 232, 255, 0.92);
+  --text-dim: rgba(232, 232, 255, 0.4);
+  --font: 'Inter', system-ui, sans-serif;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
+
+@keyframes float    { 0%,100%{transform:translateY(0)}  50%{transform:translateY(-10px)} }
+@keyframes fade-in  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pulse    { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+@keyframes orb-move { 0%{transform:translate(0,0)} 33%{transform:translate(30px,-20px)} 66%{transform:translate(-20px,15px)} 100%{transform:translate(0,0)} }

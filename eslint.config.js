@@ -24,6 +24,10 @@ module.exports = [
       '**/test/**',
       '**/*.spec.ts',
       '**/*.e2e-spec.ts',
+      // Standalone seed/migration runner scripts use console and non-null assertions by design
+      '**/database/seeds/**',
+      // apps/web is a standalone mini-app with its own TypeScript project configuration
+      'apps/web/**',
     ],
   },
 

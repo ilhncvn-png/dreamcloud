@@ -2,14 +2,14 @@ import axios from 'axios';
 import { getStoredAuth, clearStoredAuth } from '../store/auth.store';
 
 export const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
   headers: { 'Content-Type': 'application/json' },
 });
 
 api.interceptors.request.use((config) => {
   const auth = getStoredAuth();
   if (auth?.accessToken) {
-    config.headers['Authorization'] = `Bearer ${auth.accessToken}`;
+    config.headers.Authorization = `Bearer ${auth.accessToken}`;
   }
   return config;
 });
@@ -24,6 +24,6 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    return Promise.reject(err);
+    return Promise.reject(err instanceof Error ? err : new Error(String(err)));
   },
 );
