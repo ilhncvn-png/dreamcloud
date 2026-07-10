@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -48,16 +49,25 @@ import { BusinessModule } from './modules/business/business.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres' as const,
-        url: config.get<string>('database.url') ?? '',
-        autoLoadEntities: true,
-        synchronize: false,
-        namingStrategy: new SnakeNamingStrategy(),
-        poolSize: config.get<number>('database.poolSize', 10),
-        ssl: config.get<boolean>('database.ssl') ? { rejectUnauthorized: false } : false,
-        logging: config.get<string>('nodeEnv') === 'development',
-      }),
+      useFactory: (config: ConfigService) => {
+        const nodeEnv = config.get<string>('nodeEnv') ?? 'development';
+        const isDeployed = nodeEnv === 'production' || nodeEnv === 'staging';
+        return {
+          type: 'postgres' as const,
+          url: config.get<string>('database.url') ?? '',
+          autoLoadEntities: true,
+          synchronize: false,
+          namingStrategy: new SnakeNamingStrategy(),
+          poolSize: config.get<number>('database.poolSize', 10),
+          ssl: config.get<boolean>('database.ssl') ? { rejectUnauthorized: false } : false,
+          logging: nodeEnv === 'development',
+          // Automatically run pending migrations at startup in deployed environments.
+          // Migrations complete before any onModuleInit lifecycle hooks run,
+          // so all tables exist by the time services try to query them.
+          migrations: [path.join(__dirname, 'database', 'migrations', '*{.ts,.js}')],
+          migrationsRun: isDeployed,
+        };
+      },
     }),
 
     ThrottlerModule.forRootAsync({

@@ -58,6 +58,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD wget -qO- "http://localhost:${PORT:-3000}/health" || exit 1
 
-# Run pending TypeORM migrations then start the NestJS API.
-# If migrations fail the container exits non-zero and Railway aborts the deploy.
-CMD ["sh", "-c", "node dist/database/run-migrations && node dist/main"]
+CMD ["node", "dist/main"]
