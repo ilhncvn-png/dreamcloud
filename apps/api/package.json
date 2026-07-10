@@ -21,6 +21,7 @@
     "migration:run": "typeorm-ts-node-commonjs -d src/database/data-source.ts migration:run",
     "migration:revert": "typeorm-ts-node-commonjs -d src/database/data-source.ts migration:revert",
     "migration:show": "typeorm-ts-node-commonjs -d src/database/data-source.ts migration:show",
+    "migration:run:prod": "node dist/database/run-migrations",
     "seed": "ts-node src/database/seeds/run.seed.ts",
     "seed:v2": "ts-node src/database/seeds/run.seed.v2.ts",
     "seed:dreamcloud": "ts-node src/database/seeds/seed.dreamcloud.ts",
