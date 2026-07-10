@@ -2,9 +2,15 @@
 
 ## DreamCloud — Oturum Devir Notu
 
-**Son Güncelleme:** 2026-06-15  
+**Son Güncelleme:** 2026-07-10  
 **Mevcut Branch:** `develop`  
-**Son Commit:** `49e9eda` — feat(auth): implement JWT RS256 authentication with refresh token rotation
+**Son Commit:** `fe50041` — fix(api): reduce Railway startup logs and stabilize health checks
+
+### Railway Staging Durumu (Phase 1F)
+- Build: ✅ geçiyor  
+- Log flood: ✅ düzeltildi — production logger `['error','warn']`, route mapping log'ları Railway'e gitmiyor  
+- `/health` ve `/api/v1/health`: ✅ her ikisi aktif, DB bağımsız  
+- Sıradaki: Railway dashboard'da healthcheck `/health` path'inin doğru ayarlanması, ardından DB extension + migration
 
 ---
 
