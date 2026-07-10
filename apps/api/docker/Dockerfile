@@ -31,8 +31,8 @@ FROM node:22-alpine AS production
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 apigroup && \
-    adduser --system --uid 1001 --gid 1001 apiuser
+RUN addgroup -S -g 1001 apigroup && \
+    adduser -S -u 1001 -G apigroup apiuser
 
 WORKDIR /app
 
