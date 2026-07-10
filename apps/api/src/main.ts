@@ -15,18 +15,16 @@ async function bootstrap() {
   // /health is a liveness probe — no version or api prefix
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
 
+  const defaultOrigins = ['http://localhost:4000', 'http://localhost:8081', 'http://localhost:19006'];
+  const corsOrigins = process.env['CORS_ORIGINS']
+    ? process.env['CORS_ORIGINS'].split(',').map((o) => o.trim()).filter(Boolean)
+    : defaultOrigins;
+
   // Allow the admin panel and mobile dev server to call the API
   await app.register(
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('@fastify/cors') as Parameters<typeof app.register>[0],
-    {
-      origin: [
-        'http://localhost:4000', // admin panel
-        'http://localhost:8081', // expo web
-        'http://localhost:19006',
-      ],
-      credentials: true,
-    },
+    { origin: corsOrigins, credentials: true },
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
