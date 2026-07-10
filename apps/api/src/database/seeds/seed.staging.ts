@@ -562,10 +562,10 @@ async function run(): Promise<void> {
         dreamId = randomUUID();
         await ds.query(
           `INSERT INTO dreams
-             (id, user_id, title, content, category, visibility, mood, is_draft,
+             (id, user_id, title, content, category, visibility, is_draft,
               tags, view_count, like_count, save_count, comment_count, created_at, updated_at)
-           VALUES ($1,$2,$3,$4,$5::dream_category,$6::dream_visibility,$7,false,
-                   ARRAY[$8::text]::text[],0,0,0,0,$9::timestamptz,NOW())`,
+           VALUES ($1,$2,$3,$4,$5::dream_category,$6::dream_visibility,false,
+                   ARRAY[$7::text]::text[],0,0,0,0,$8::timestamptz,NOW())`,
           [
             dreamId,
             ownerId,
@@ -573,7 +573,6 @@ async function run(): Promise<void> {
             d.content,
             d.category,
             d.visibility,
-            d.mood,
             SEED_TAG,
             daysAgo(d.daysAgoN),
           ],
