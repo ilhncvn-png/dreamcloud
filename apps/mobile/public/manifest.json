@@ -1,0 +1,27 @@
+{
+  "name": "DreamCloud",
+  "short_name": "DreamCloud",
+  "description": "İnsanlığın bilinçaltını haritalıyoruz — rüyaların kolektif anlamını keşfeden platform.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F0F23",
+  "theme_color": "#0F0F23",
+  "lang": "tr",
+  "categories": ["lifestyle", "social"],
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
