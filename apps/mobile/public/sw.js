@@ -1,8 +1,8 @@
-// DreamCloud Service Worker v1
+// DreamCloud Service Worker v2
 // Caches the application shell for offline access.
 // Never caches API responses or authenticated user data.
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `dreamcloud-shell-${CACHE_VERSION}`;
 
 const SHELL_URLS = ['/', '/index.html', '/favicon.ico', '/manifest.json', '/icon.png'];

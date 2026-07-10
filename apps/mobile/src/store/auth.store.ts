@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import { loginApi, logoutApi, registerApi } from '@/api/auth.api';
+import { getStoredItem, setStoredItem, removeStoredItem } from '@/utils/storage';
 import type { AuthUser, LoginDto, RegisterDto } from '@/types/auth.types';
 
 interface AuthStore {
@@ -22,13 +22,13 @@ function decodeUser(token: string): AuthUser {
 }
 
 async function persistTokens(accessToken: string, refreshToken: string): Promise<void> {
-  await SecureStore.setItemAsync('access_token', accessToken);
-  await SecureStore.setItemAsync('refresh_token', refreshToken);
+  await setStoredItem('access_token', accessToken);
+  await setStoredItem('refresh_token', refreshToken);
 }
 
 async function clearTokens(): Promise<void> {
-  await SecureStore.deleteItemAsync('access_token');
-  await SecureStore.deleteItemAsync('refresh_token');
+  await removeStoredItem('access_token');
+  await removeStoredItem('refresh_token');
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -75,8 +75,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   hydrate: async () => {
     try {
-      const accessToken = await SecureStore.getItemAsync('access_token');
-      const refreshToken = await SecureStore.getItemAsync('refresh_token');
+      const accessToken = await getStoredItem('access_token');
+      const refreshToken = await getStoredItem('refresh_token');
 
       if (accessToken && refreshToken) {
         const user = decodeUser(accessToken);

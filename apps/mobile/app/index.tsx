@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { getStoredItem } from '@/utils/storage';
 import { useAuthStore } from '@/store/auth.store';
 
 export default function Index() {
@@ -9,8 +9,8 @@ export default function Index() {
   const [onboardingDone, setOnboardingDone] = useState(false);
 
   useEffect(() => {
-    SecureStore.getItemAsync('onboarding_done')
-      .then(val => {
+    getStoredItem('onboarding_done')
+      .then((val) => {
         setOnboardingDone(val === 'true');
         setStorageChecked(true);
       })
