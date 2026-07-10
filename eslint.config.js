@@ -34,6 +34,15 @@ module.exports = [
   // TypeScript source files
   ...compat.extends('./packages/eslint-config/index.js'),
 
+  // admin.api.ts uses `x || undefined` intentionally to coerce empty strings to
+  // undefined in query-param builders — `??` would pass empty strings instead.
+  {
+    files: ['apps/admin/src/api/admin.api.ts'],
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+    },
+  },
+
   {
     languageOptions: {
       parserOptions: {

@@ -61,7 +61,6 @@ import type {
   CollectiveSignals,
 } from '../types/admin.types';
 import { decodeJwtPayload, isAdminRole } from '../store/auth.store';
-import axios from 'axios';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -69,22 +68,30 @@ export async function adminLogin(email: string, password: string): Promise<Store
   const { data: body } = await api.post<{ data: AuthTokens }>('/auth/login', { email, password });
   const tokens = body.data;
   const payload = decodeJwtPayload(tokens.accessToken);
-  const role    = String(payload?.['role']  ?? '');
-  const sub     = String(payload?.['sub']   ?? '');
-  const mail    = String(payload?.['email'] ?? email);
-  console.log('[admin login] jwt payload:', { sub, mail, role });
-  if (!isAdminRole(role)) throw new Error(`Bu hesabın admin yetkisi yok. (mevcut rol: "${role || 'boş'}")`);
+  const role = (payload?.['role'] as string | undefined) ?? '';
+  const sub = (payload?.['sub'] as string | undefined) ?? '';
+  const mail = (payload?.['email'] as string | undefined) ?? email;
+  if (!isAdminRole(role))
+    throw new Error(`Bu hesabın admin yetkisi yok. (mevcut rol: "${role || 'boş'}")`);
 
   let username = mail.split('@')[0];
   try {
-    const tmpApi = axios.create({ baseURL: '/api/v1' });
-    const meRes  = await tmpApi.get<{ data: { username: string; role: string } }>(
-      '/auth/me', { headers: { Authorization: `Bearer ${tokens.accessToken}` } },
-    );
+    const meRes = await api.get<{ data: { username: string; role: string } }>('/auth/me', {
+      headers: { Authorization: `Bearer ${tokens.accessToken}` },
+    });
     username = meRes.data.data.username;
-  } catch { /* fallback */ }
+  } catch {
+    /* fallback */
+  }
 
-  return { id: sub, email: mail, username, role, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+  return {
+    id: sub,
+    email: mail,
+    username,
+    role,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+  };
 }
 
 // ── Overview ──────────────────────────────────────────────────────────────────
@@ -97,12 +104,24 @@ export async function fetchOverview(): Promise<AdminOverview> {
 // ── Users ─────────────────────────────────────────────────────────────────────
 
 export async function fetchUsers(
-  page = 1, limit = 20, search = '',
-  role?: string, status?: 'active' | 'inactive',
-  sortBy?: string, sortDir?: 'asc' | 'desc',
+  page = 1,
+  limit = 20,
+  search = '',
+  role?: string,
+  status?: 'active' | 'inactive',
+  sortBy?: string,
+  sortDir?: 'asc' | 'desc',
 ): Promise<PaginatedResult<AdminUser>> {
   const { data } = await api.get<{ data: PaginatedResult<AdminUser> }>('/admin/users', {
-    params: { page, limit, search: search || undefined, role: role || undefined, status: status || undefined, sortBy: sortBy || undefined, sortDir: sortDir || undefined },
+    params: {
+      page,
+      limit,
+      search: search || undefined,
+      role: role || undefined,
+      status: status || undefined,
+      sortBy: sortBy || undefined,
+      sortDir: sortDir || undefined,
+    },
   });
   return data.data;
 }
@@ -116,16 +135,27 @@ export async function updateUserRole(userId: string, role: string): Promise<void
   await api.patch(`/admin/users/${userId}/role`, { role });
 }
 
-export async function updateUserStatus(userId: string, isActive: boolean, lockedUntil?: string | null): Promise<void> {
+export async function updateUserStatus(
+  userId: string,
+  isActive: boolean,
+  lockedUntil?: string | null,
+): Promise<void> {
   await api.patch(`/admin/users/${userId}/status`, { isActive, lockedUntil });
 }
 
-export async function updateUserProfile(userId: string, data: { displayName?: string; bio?: string; avatarUrl?: string }): Promise<void> {
+export async function updateUserProfile(
+  userId: string,
+  data: { displayName?: string; bio?: string; avatarUrl?: string },
+): Promise<void> {
   await api.patch(`/admin/users/${userId}/profile`, data);
 }
 
-export async function resetUserPassword(userId: string): Promise<{ ok: boolean; resetToken: string }> {
-  const { data } = await api.post<{ data: { ok: boolean; resetToken: string } }>(`/admin/users/${userId}/reset-password`);
+export async function resetUserPassword(
+  userId: string,
+): Promise<{ ok: boolean; resetToken: string }> {
+  const { data } = await api.post<{ data: { ok: boolean; resetToken: string } }>(
+    `/admin/users/${userId}/reset-password`,
+  );
   return data.data;
 }
 
@@ -134,8 +164,15 @@ export async function fetchUserActivity(userId: string): Promise<ActivityEvent[]
   return data.data;
 }
 
-export async function fetchUserDreams(userId: string, page = 1, limit = 10): Promise<PaginatedResult<AdminDream>> {
-  const { data } = await api.get<{ data: PaginatedResult<AdminDream> }>(`/admin/users/${userId}/dreams`, { params: { page, limit } });
+export async function fetchUserDreams(
+  userId: string,
+  page = 1,
+  limit = 10,
+): Promise<PaginatedResult<AdminDream>> {
+  const { data } = await api.get<{ data: PaginatedResult<AdminDream> }>(
+    `/admin/users/${userId}/dreams`,
+    { params: { page, limit } },
+  );
   return data.data;
 }
 
@@ -157,22 +194,24 @@ export interface FetchDreamsParams {
   sortDir?: 'asc' | 'desc';
 }
 
-export async function fetchDreams(params: FetchDreamsParams = {}): Promise<PaginatedResult<AdminDream>> {
+export async function fetchDreams(
+  params: FetchDreamsParams = {},
+): Promise<PaginatedResult<AdminDream>> {
   const { data } = await api.get<{ data: PaginatedResult<AdminDream> }>('/admin/dreams', {
     params: {
-      page:         params.page ?? 1,
-      limit:        params.limit ?? 20,
-      search:       params.search       || undefined,
-      category:     params.category     || undefined,
-      visibility:   params.visibility   || undefined,
+      page: params.page ?? 1,
+      limit: params.limit ?? 20,
+      search: params.search || undefined,
+      category: params.category || undefined,
+      visibility: params.visibility || undefined,
       authorSearch: params.authorSearch || undefined,
-      hasReports:   params.hasReports   ?? undefined,
-      isFeatured:   params.isFeatured   ?? undefined,
-      isHidden:     params.isHidden      ?? undefined,
-      dateFrom:     params.dateFrom     || undefined,
-      dateTo:       params.dateTo       || undefined,
-      sortBy:       params.sortBy       || undefined,
-      sortDir:      params.sortDir      || undefined,
+      hasReports: params.hasReports ?? undefined,
+      isFeatured: params.isFeatured ?? undefined,
+      isHidden: params.isHidden ?? undefined,
+      dateFrom: params.dateFrom || undefined,
+      dateTo: params.dateTo || undefined,
+      sortBy: params.sortBy || undefined,
+      sortDir: params.sortDir || undefined,
     },
   });
   return data.data;
@@ -207,7 +246,10 @@ export async function fetchDreamReports(dreamId: string): Promise<AdminDreamRepo
   return data.data;
 }
 
-export async function resolveDreamReport(reportId: string, status: 'resolved' | 'dismissed'): Promise<void> {
+export async function resolveDreamReport(
+  reportId: string,
+  status: 'resolved' | 'dismissed',
+): Promise<void> {
   await api.patch(`/admin/reports/${reportId}/resolve`, { status });
 }
 
@@ -216,13 +258,18 @@ export async function fetchDreamAnalytics(): Promise<DreamAnalytics> {
   return data.data;
 }
 
-export async function fetchAllReports(params: {
-  page?: number; limit?: number; status?: string; reason?: string;
-} = {}): Promise<PaginatedResult<AdminReport>> {
+export async function fetchAllReports(
+  params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    reason?: string;
+  } = {},
+): Promise<PaginatedResult<AdminReport>> {
   const { data } = await api.get<{ data: PaginatedResult<AdminReport> }>('/admin/reports', {
     params: {
-      page:   params.page   ?? 1,
-      limit:  params.limit  ?? 20,
+      page: params.page ?? 1,
+      limit: params.limit ?? 20,
       status: params.status || undefined,
       reason: params.reason || undefined,
     },
@@ -239,7 +286,10 @@ export async function bulkDreamAction(
   ids: string[],
   action: 'hide' | 'unhide' | 'feature' | 'unfeature' | 'delete',
 ): Promise<{ affected: number }> {
-  const { data } = await api.post<{ data: { affected: number } }>('/admin/dreams/bulk', { ids, action });
+  const { data } = await api.post<{ data: { affected: number } }>('/admin/dreams/bulk', {
+    ids,
+    action,
+  });
   return data.data;
 }
 
@@ -249,12 +299,16 @@ export async function fetchDreamIntelligence(): Promise<DreamIntelligenceData> {
 }
 
 export async function fetchGrowthAnalytics(days = 30): Promise<GrowthAnalytics> {
-  const { data } = await api.get<{ data: GrowthAnalytics }>('/admin/analytics/growth', { params: { days } });
+  const { data } = await api.get<{ data: GrowthAnalytics }>('/admin/analytics/growth', {
+    params: { days },
+  });
   return data.data;
 }
 
 export async function fetchEngagementAnalytics(days = 30): Promise<EngagementAnalytics> {
-  const { data } = await api.get<{ data: EngagementAnalytics }>('/admin/analytics/engagement', { params: { days } });
+  const { data } = await api.get<{ data: EngagementAnalytics }>('/admin/analytics/engagement', {
+    params: { days },
+  });
   return data.data;
 }
 
@@ -275,8 +329,13 @@ export async function fetchOperationalAlerts(): Promise<OperationalAlertsData> {
   return data.data;
 }
 
-export async function fetchUserRiskList(page = 1, limit = 50): Promise<PaginatedResult<UserRiskEntry>> {
-  const { data } = await api.get<{ data: PaginatedResult<UserRiskEntry> }>('/admin/risk', { params: { page, limit } });
+export async function fetchUserRiskList(
+  page = 1,
+  limit = 50,
+): Promise<PaginatedResult<UserRiskEntry>> {
+  const { data } = await api.get<{ data: PaginatedResult<UserRiskEntry> }>('/admin/risk', {
+    params: { page, limit },
+  });
   return data.data;
 }
 
@@ -285,17 +344,25 @@ export async function fetchEmployees(): Promise<EmployeeEntry[]> {
   return data.data;
 }
 
-export async function fetchSupportTickets(params: {
-  page?: number; limit?: number; status?: string; priority?: string;
-} = {}): Promise<PaginatedResult<SupportTicket>> {
-  const { data } = await api.get<{ data: PaginatedResult<SupportTicket> }>('/admin/support/tickets', {
-    params: {
-      page:     params.page     ?? 1,
-      limit:    params.limit    ?? 20,
-      status:   params.status   || undefined,
-      priority: params.priority || undefined,
+export async function fetchSupportTickets(
+  params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    priority?: string;
+  } = {},
+): Promise<PaginatedResult<SupportTicket>> {
+  const { data } = await api.get<{ data: PaginatedResult<SupportTicket> }>(
+    '/admin/support/tickets',
+    {
+      params: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+        status: params.status || undefined,
+        priority: params.priority || undefined,
+      },
     },
-  });
+  );
   return data.data;
 }
 
@@ -311,13 +378,16 @@ export async function createSupportTicket(body: {
   return data.data;
 }
 
-export async function updateSupportTicket(id: string, body: {
-  status?: string;
-  priority?: string;
-  assignedToId?: string | null;
-  resolutionNotes?: string;
-  internalNotes?: string;
-}): Promise<SupportTicket> {
+export async function updateSupportTicket(
+  id: string,
+  body: {
+    status?: string;
+    priority?: string;
+    assignedToId?: string | null;
+    resolutionNotes?: string;
+    internalNotes?: string;
+  },
+): Promise<SupportTicket> {
   const { data } = await api.patch<{ data: SupportTicket }>(`/admin/support/tickets/${id}`, body);
   return data.data;
 }
@@ -387,7 +457,9 @@ export async function fetchGlobalDreamMap(): Promise<GlobalDreamMapData> {
 }
 
 export async function fetchCollectiveConsciousness(): Promise<CollectiveConsciousnessData> {
-  const { data } = await api.get<{ data: CollectiveConsciousnessData }>('/admin/collective-consciousness');
+  const { data } = await api.get<{ data: CollectiveConsciousnessData }>(
+    '/admin/collective-consciousness',
+  );
   return data.data;
 }
 
@@ -400,7 +472,11 @@ export async function fetchActivity(): Promise<ActivityEvent[]> {
 
 // ── Admin logs ────────────────────────────────────────────────────────────────
 
-export async function fetchAdminLogs(page = 1, limit = 50, actionType?: string): Promise<PaginatedResult<AdminLogEntry>> {
+export async function fetchAdminLogs(
+  page = 1,
+  limit = 50,
+  actionType?: string,
+): Promise<PaginatedResult<AdminLogEntry>> {
   const { data } = await api.get<{ data: PaginatedResult<AdminLogEntry> }>('/admin/logs', {
     params: { page, limit, actionType: actionType || undefined },
   });
@@ -426,17 +502,27 @@ export async function fetchFeatureFlags(): Promise<FeatureFlag[]> {
 }
 
 export async function createFeatureFlag(dto: {
-  key: string; name: string; description?: string;
-  enabled?: boolean; targetAudience?: string; rolloutPercentage?: number;
+  key: string;
+  name: string;
+  description?: string;
+  enabled?: boolean;
+  targetAudience?: string;
+  rolloutPercentage?: number;
 }): Promise<FeatureFlag> {
   const { data } = await api.post<{ data: FeatureFlag }>('/admin/feature-flags', dto);
   return data.data;
 }
 
-export async function updateFeatureFlag(id: string, dto: {
-  name?: string; description?: string; enabled?: boolean;
-  targetAudience?: string; rolloutPercentage?: number;
-}): Promise<FeatureFlag> {
+export async function updateFeatureFlag(
+  id: string,
+  dto: {
+    name?: string;
+    description?: string;
+    enabled?: boolean;
+    targetAudience?: string;
+    rolloutPercentage?: number;
+  },
+): Promise<FeatureFlag> {
   const { data } = await api.patch<{ data: FeatureFlag }>(`/admin/feature-flags/${id}`, dto);
   return data.data;
 }
@@ -448,16 +534,28 @@ export async function deleteFeatureFlag(id: string): Promise<void> {
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 export async function sendAdminNotification(dto: {
-  type: string; title: string; message: string; targetAudience?: string;
+  type: string;
+  title: string;
+  message: string;
+  targetAudience?: string;
 }): Promise<AdminNotificationEntry> {
-  const { data } = await api.post<{ data: AdminNotificationEntry }>('/admin/notifications/send', dto);
+  const { data } = await api.post<{ data: AdminNotificationEntry }>(
+    '/admin/notifications/send',
+    dto,
+  );
   return data.data;
 }
 
-export async function fetchNotificationHistory(page = 1, limit = 50): Promise<PaginatedResult<AdminNotificationEntry>> {
-  const { data } = await api.get<{ data: PaginatedResult<AdminNotificationEntry> }>('/admin/notifications/history', {
-    params: { page, limit },
-  });
+export async function fetchNotificationHistory(
+  page = 1,
+  limit = 50,
+): Promise<PaginatedResult<AdminNotificationEntry>> {
+  const { data } = await api.get<{ data: PaginatedResult<AdminNotificationEntry> }>(
+    '/admin/notifications/history',
+    {
+      params: { page, limit },
+    },
+  );
   return data.data;
 }
 
@@ -468,7 +566,9 @@ export async function fetchModerationRules(): Promise<ModerationRules> {
   return data.data;
 }
 
-export async function updateModerationRules(dto: Partial<ModerationRules>): Promise<ModerationRules> {
+export async function updateModerationRules(
+  dto: Partial<ModerationRules>,
+): Promise<ModerationRules> {
   const { data } = await api.patch<{ data: ModerationRules }>('/admin/moderation-rules', dto);
   return data.data;
 }
@@ -485,11 +585,16 @@ export async function fetchLiveStream(hours = 24, limit = 60): Promise<LiveStrea
 // ── Moderation Queue ──────────────────────────────────────────────────────────
 
 export async function fetchModerationQueue(
-  page = 1, limit = 20, filter: 'pending' | 'resolved' | 'all' = 'pending',
+  page = 1,
+  limit = 20,
+  filter: 'pending' | 'resolved' | 'all' = 'pending',
 ): Promise<PaginatedResult<ModerationQueueItem>> {
-  const { data } = await api.get<{ data: PaginatedResult<ModerationQueueItem> }>('/admin/moderation-queue', {
-    params: { page, limit, filter },
-  });
+  const { data } = await api.get<{ data: PaginatedResult<ModerationQueueItem> }>(
+    '/admin/moderation-queue',
+    {
+      params: { page, limit, filter },
+    },
+  );
   return data.data;
 }
 
@@ -512,10 +617,13 @@ export async function fetchPlatformHealthLive(): Promise<PlatformHealthLive> {
   return data.data;
 }
 
-export async function fetchPlatformHealthHistory(days = 30): Promise<Array<Record<string, unknown>>> {
-  const { data } = await api.get<{ data: Array<Record<string, unknown>> }>('/admin/platform-health/history', {
-    params: { days },
-  });
+export async function fetchPlatformHealthHistory(days = 30): Promise<Record<string, unknown>[]> {
+  const { data } = await api.get<{ data: Record<string, unknown>[] }>(
+    '/admin/platform-health/history',
+    {
+      params: { days },
+    },
+  );
   return data.data;
 }
 
@@ -537,10 +645,15 @@ export async function generateAISignals(): Promise<{ count: number }> {
 
 // ── Admin Notification Queue ──────────────────────────────────────────────────
 
-export async function fetchAdminNotificationQueue(limit = 30): Promise<{ items: AdminNotificationItem[]; unreadCount: number }> {
-  const { data } = await api.get<{ data: { items: AdminNotificationItem[]; unreadCount: number } }>('/admin/notification-queue', {
-    params: { limit },
-  });
+export async function fetchAdminNotificationQueue(
+  limit = 30,
+): Promise<{ items: AdminNotificationItem[]; unreadCount: number }> {
+  const { data } = await api.get<{ data: { items: AdminNotificationItem[]; unreadCount: number } }>(
+    '/admin/notification-queue',
+    {
+      params: { limit },
+    },
+  );
   return data.data;
 }
 
@@ -555,7 +668,9 @@ export async function markAllAdminNotificationsRead(): Promise<void> {
 // ── Dream Analysis ────────────────────────────────────────────────────────────
 
 export async function triggerDreamAnalysis(dreamId: string): Promise<DreamAnalysisResult> {
-  const { data } = await api.post<{ data: DreamAnalysisResult }>(`/admin/dream-analysis/${dreamId}/analyze`);
+  const { data } = await api.post<{ data: DreamAnalysisResult }>(
+    `/admin/dream-analysis/${dreamId}/analyze`,
+  );
   return data.data;
 }
 
@@ -565,7 +680,9 @@ export async function bulkDreamAnalysis(): Promise<{ processed: number }> {
 }
 
 export async function fetchDreamAnalysis(dreamId: string): Promise<DreamAnalysisResult | null> {
-  const { data } = await api.get<{ data: DreamAnalysisResult | null }>(`/admin/dream-analysis/${dreamId}`);
+  const { data } = await api.get<{ data: DreamAnalysisResult | null }>(
+    `/admin/dream-analysis/${dreamId}`,
+  );
   return data.data;
 }
 
@@ -576,8 +693,12 @@ export async function fetchPlatformAnalysisStats(): Promise<PlatformAnalysisStat
 
 // ── User Intelligence System ──────────────────────────────────────────────────
 
-export async function fetchUserIntelligenceProfile(userId: string): Promise<UserIntelligenceProfile> {
-  const { data } = await api.get<{ data: UserIntelligenceProfile }>(`/admin/users/${userId}/intelligence`);
+export async function fetchUserIntelligenceProfile(
+  userId: string,
+): Promise<UserIntelligenceProfile> {
+  const { data } = await api.get<{ data: UserIntelligenceProfile }>(
+    `/admin/users/${userId}/intelligence`,
+  );
   return data.data;
 }
 
@@ -587,34 +708,48 @@ export async function fetchUserRiskProfile(userId: string): Promise<UserRiskProf
 }
 
 export async function fetchUserModerationHistory(userId: string): Promise<ModerationHistoryItem[]> {
-  const { data } = await api.get<{ data: ModerationHistoryItem[] }>(`/admin/users/${userId}/moderation-history`);
+  const { data } = await api.get<{ data: ModerationHistoryItem[] }>(
+    `/admin/users/${userId}/moderation-history`,
+  );
   return data.data;
 }
 
-export async function fetchDreamCollectiveRelevance(dreamId: string): Promise<DreamCollectiveRelevance> {
-  const { data } = await api.get<{ data: DreamCollectiveRelevance }>(`/admin/dreams/${dreamId}/collective-relevance`);
+export async function fetchDreamCollectiveRelevance(
+  dreamId: string,
+): Promise<DreamCollectiveRelevance> {
+  const { data } = await api.get<{ data: DreamCollectiveRelevance }>(
+    `/admin/dreams/${dreamId}/collective-relevance`,
+  );
   return data.data;
 }
 
 export async function fetchEmotionalTrends(days = 28): Promise<EmotionalTrend[]> {
-  const { data } = await api.get<{ data: EmotionalTrend[] }>(`/admin/intelligence/emotional-trends?days=${days}`);
+  const { data } = await api.get<{ data: EmotionalTrend[] }>(
+    `/admin/intelligence/emotional-trends?days=${days}`,
+  );
   return data.data;
 }
 
 export async function fetchResonanceEvents(limit = 10): Promise<ResonanceEvent[]> {
-  const { data } = await api.get<{ data: ResonanceEvent[] }>(`/admin/intelligence/resonance-events?limit=${limit}`);
+  const { data } = await api.get<{ data: ResonanceEvent[] }>(
+    `/admin/intelligence/resonance-events?limit=${limit}`,
+  );
   return data.data;
 }
 
 export async function fetchCollectiveIntelligenceSummary(): Promise<CollectiveIntelligenceSummary> {
-  const { data } = await api.get<{ data: CollectiveIntelligenceSummary }>('/admin/intelligence/collective-summary');
+  const { data } = await api.get<{ data: CollectiveIntelligenceSummary }>(
+    '/admin/intelligence/collective-summary',
+  );
   return data.data;
 }
 
 // ── Dream Connection Engine ───────────────────────────────────────────────────
 
 export async function fetchDreamConnections(
-  page = 1, limit = 30, minScore = 0,
+  page = 1,
+  limit = 30,
+  minScore = 0,
 ): Promise<PaginatedResult<DreamConnection>> {
   const { data } = await api.get<{ data: PaginatedResult<DreamConnection> }>(
     `/admin/connections?page=${page}&limit=${limit}&minScore=${minScore}`,
@@ -623,12 +758,15 @@ export async function fetchDreamConnections(
 }
 
 export async function computeUserResonanceScores(): Promise<{ upserted: number }> {
-  const { data } = await api.post<{ data: { upserted: number } }>('/admin/connections/compute-resonance');
+  const { data } = await api.post<{ data: { upserted: number } }>(
+    '/admin/connections/compute-resonance',
+  );
   return data.data;
 }
 
 export async function fetchUserResonanceScores(
-  page = 1, limit = 30,
+  page = 1,
+  limit = 30,
 ): Promise<PaginatedResult<UserResonanceScore>> {
   const { data } = await api.get<{ data: PaginatedResult<UserResonanceScore> }>(
     `/admin/connections/user-resonance?page=${page}&limit=${limit}`,
@@ -637,25 +775,29 @@ export async function fetchUserResonanceScores(
 }
 
 export async function computeSeenInDreams(): Promise<{ upserted: number }> {
-  const { data } = await api.post<{ data: { upserted: number } }>('/admin/connections/compute-seen');
+  const { data } = await api.post<{ data: { upserted: number } }>(
+    '/admin/connections/compute-seen',
+  );
   return data.data;
 }
 
-export async function fetchSeenInDreams(
-  type?: string, limit = 50,
-): Promise<SeenInDream[]> {
+export async function fetchSeenInDreams(type?: string, limit = 50): Promise<SeenInDream[]> {
   const q = type ? `?type=${type}&limit=${limit}` : `?limit=${limit}`;
   const { data } = await api.get<{ data: SeenInDream[] }>(`/admin/connections/seen-in-dreams${q}`);
   return data.data;
 }
 
 export async function fetchConnectionFeed(limit = 40): Promise<ConnectionFeedEvent[]> {
-  const { data } = await api.get<{ data: ConnectionFeedEvent[] }>(`/admin/connections/feed?limit=${limit}`);
+  const { data } = await api.get<{ data: ConnectionFeedEvent[] }>(
+    `/admin/connections/feed?limit=${limit}`,
+  );
   return data.data;
 }
 
 export async function fetchCollectiveSignals(days = 7): Promise<CollectiveSignals> {
-  const { data } = await api.get<{ data: CollectiveSignals }>(`/admin/connections/collective-signals?days=${days}`);
+  const { data } = await api.get<{ data: CollectiveSignals }>(
+    `/admin/connections/collective-signals?days=${days}`,
+  );
   return data.data;
 }
 
@@ -686,10 +828,25 @@ export interface EventStats {
   window_hours: number;
 }
 
-export interface TimelineWeekEmotion { week: string; emotion: string; count: number }
-export interface TimelineSymbol { week: string; manifestation: string; count: number }
-export interface TimelineResonance { created_at: string; score_pct: number; resonance_level: string }
-export interface TimelineFrequency { week: string; count: number }
+export interface TimelineWeekEmotion {
+  week: string;
+  emotion: string;
+  count: number;
+}
+export interface TimelineSymbol {
+  week: string;
+  manifestation: string;
+  count: number;
+}
+export interface TimelineResonance {
+  created_at: string;
+  score_pct: number;
+  resonance_level: string;
+}
+export interface TimelineFrequency {
+  week: string;
+  count: number;
+}
 export interface UserTimeline {
   emotionHistory: TimelineWeekEmotion[];
   symbolEvolution: TimelineSymbol[];
@@ -720,22 +877,36 @@ export interface DreamGraph {
   dreamId: string;
   nodes: GraphNode[];
   connections: GraphConnection[];
-  summary: { symbolCount: number; emotionCount: number; archetypeCount: number; themeCount: number; placeCount: number; connectionCount: number };
+  summary: {
+    symbolCount: number;
+    emotionCount: number;
+    archetypeCount: number;
+    themeCount: number;
+    placeCount: number;
+    connectionCount: number;
+  };
 }
 
-export interface InsightCard { type: string; title: string; body: string; color: string }
+export interface InsightCard {
+  type: string;
+  title: string;
+  body: string;
+  color: string;
+}
 export interface UserInsights {
   insights: InsightCard[];
-  topEmotions: Array<{ emotion: string; count: number; avg_intensity: number }>;
-  topSymbols: Array<{ manifestation: string; count: number }>;
-  topArchetypes: Array<{ archetype: string; count: number }>;
+  topEmotions: { emotion: string; count: number; avg_intensity: number }[];
+  topSymbols: { manifestation: string; count: number }[];
+  topArchetypes: { archetype: string; count: number }[];
   resonanceStats: { total: number; avgScore: number; peakScore: number };
   dreamStats: { totalDreams: number; avgDreamScore: number; avgResonance: number };
   generatedAt: string;
 }
 
 export async function fetchLiveEvents(hours = 24, limit = 60): Promise<LiveEvent[]> {
-  const { data } = await api.get<{ data: LiveEvent[] }>(`/admin/engine/events?hours=${hours}&limit=${limit}`);
+  const { data } = await api.get<{ data: LiveEvent[] }>(
+    `/admin/engine/events?hours=${hours}&limit=${limit}`,
+  );
   return data.data;
 }
 
@@ -761,9 +932,9 @@ export async function fetchUserInsights(userId: string): Promise<UserInsights> {
 
 // ── Dream Operating System (Phase 4) ─────────────────────────────────────────
 
-export type OsRuleType   = 'event' | 'threshold' | 'scheduled';
+export type OsRuleType = 'event' | 'threshold' | 'scheduled';
 export type OsRuleStatus = 'active' | 'paused' | 'disabled';
-export type OsJobStatus  = 'idle' | 'running' | 'failed' | 'completed';
+export type OsJobStatus = 'idle' | 'running' | 'failed' | 'completed';
 
 export interface AutomationRule {
   id: string;
@@ -794,8 +965,15 @@ export interface CreateAutomationRulePayload {
   action_config?: Record<string, unknown>;
 }
 
-export interface ScenarioCondition { field: string; operator: string; value: unknown }
-export interface ScenarioAction    { type: string; config: Record<string, unknown> }
+export interface ScenarioCondition {
+  field: string;
+  operator: string;
+  value: unknown;
+}
+export interface ScenarioAction {
+  type: string;
+  config: Record<string, unknown>;
+}
 
 export interface ScenarioRule {
   id: string;
@@ -835,23 +1013,54 @@ export interface AlertCenterData {
   warnings: OsAlert[];
   intelligence: OsAlert[];
   system: OsAlert[];
-  counts: { critical: number; warnings: number; intelligence: number; system: number; total: number };
+  counts: {
+    critical: number;
+    warnings: number;
+    intelligence: number;
+    system: number;
+    total: number;
+  };
   fetchedAt: string;
 }
 
-export interface MoodTrendPoint  { week: string; emotion: string; cnt: number }
-export interface TrendSymbol     { manifestation: string; current_count: number; prior_count: number; growth: number }
-export interface AnomalyDay      { day: string; cnt: number; deviation: number; anomaly_type: 'spike' | 'drop' | 'normal' }
-export interface CollectiveChange{ emotion: string; current: number; prior: number; delta: number; pct_change: number | null }
-export interface ResonanceTrendPoint { week: string; matches: number; avg_score: number; cosmic_count: number }
+export interface MoodTrendPoint {
+  week: string;
+  emotion: string;
+  cnt: number;
+}
+export interface TrendSymbol {
+  manifestation: string;
+  current_count: number;
+  prior_count: number;
+  growth: number;
+}
+export interface AnomalyDay {
+  day: string;
+  cnt: number;
+  deviation: number;
+  anomaly_type: 'spike' | 'drop' | 'normal';
+}
+export interface CollectiveChange {
+  emotion: string;
+  current: number;
+  prior: number;
+  delta: number;
+  pct_change: number | null;
+}
+export interface ResonanceTrendPoint {
+  week: string;
+  matches: number;
+  avg_score: number;
+  cosmic_count: number;
+}
 
 export interface AIObserverData {
-  moodTrend:        MoodTrendPoint[];
-  trendDetection:   TrendSymbol[];
-  anomalies:        AnomalyDay[];
-  collectiveChanges:CollectiveChange[];
-  resonanceTrend:   ResonanceTrendPoint[];
-  analyzedAt:       string;
+  moodTrend: MoodTrendPoint[];
+  trendDetection: TrendSymbol[];
+  anomalies: AnomalyDay[];
+  collectiveChanges: CollectiveChange[];
+  resonanceTrend: ResonanceTrendPoint[];
+  analyzedAt: string;
 }
 
 export interface SchedulerJob {
@@ -877,13 +1086,19 @@ export async function fetchAutomationRules(): Promise<AutomationRule[]> {
   return data.data;
 }
 
-export async function createAutomationRule(payload: CreateAutomationRulePayload): Promise<AutomationRule> {
+export async function createAutomationRule(
+  payload: CreateAutomationRulePayload,
+): Promise<AutomationRule> {
   const { data } = await api.post<{ data: AutomationRule }>('/admin/os/automation', payload);
   return data.data;
 }
 
-export async function toggleAutomationRule(id: string): Promise<{ id: string; name: string; status: OsRuleStatus }> {
-  const { data } = await api.patch<{ data: { id: string; name: string; status: OsRuleStatus } }>(`/admin/os/automation/${id}/toggle`);
+export async function toggleAutomationRule(
+  id: string,
+): Promise<{ id: string; name: string; status: OsRuleStatus }> {
+  const { data } = await api.patch<{ data: { id: string; name: string; status: OsRuleStatus } }>(
+    `/admin/os/automation/${id}/toggle`,
+  );
   return data.data;
 }
 
@@ -904,8 +1119,12 @@ export async function createScenario(payload: CreateScenarioPayload): Promise<Sc
   return data.data;
 }
 
-export async function toggleScenario(id: string): Promise<{ id: string; name: string; status: OsRuleStatus }> {
-  const { data } = await api.patch<{ data: { id: string; name: string; status: OsRuleStatus } }>(`/admin/os/scenarios/${id}/toggle`);
+export async function toggleScenario(
+  id: string,
+): Promise<{ id: string; name: string; status: OsRuleStatus }> {
+  const { data } = await api.patch<{ data: { id: string; name: string; status: OsRuleStatus } }>(
+    `/admin/os/scenarios/${id}/toggle`,
+  );
   return data.data;
 }
 
@@ -935,13 +1154,21 @@ export async function fetchSchedulerJobs(): Promise<SchedulerJob[]> {
   return data.data;
 }
 
-export async function triggerSchedulerJob(name: string): Promise<{ ok: boolean; job: string; result?: string; durationMs?: number }> {
-  const { data } = await api.post<{ data: { ok: boolean; job: string; result?: string; durationMs?: number } }>(`/admin/os/scheduler/${name}/trigger`);
+export async function triggerSchedulerJob(
+  name: string,
+): Promise<{ ok: boolean; job: string; result?: string; durationMs?: number }> {
+  const { data } = await api.post<{
+    data: { ok: boolean; job: string; result?: string; durationMs?: number };
+  }>(`/admin/os/scheduler/${name}/trigger`);
   return data.data;
 }
 
-export async function toggleSchedulerJob(id: string): Promise<{ id: string; name: string; enabled: boolean }> {
-  const { data } = await api.patch<{ data: { id: string; name: string; enabled: boolean } }>(`/admin/os/scheduler/${id}/toggle`);
+export async function toggleSchedulerJob(
+  id: string,
+): Promise<{ id: string; name: string; enabled: boolean }> {
+  const { data } = await api.patch<{ data: { id: string; name: string; enabled: boolean } }>(
+    `/admin/os/scheduler/${id}/toggle`,
+  );
   return data.data;
 }
 
@@ -950,14 +1177,28 @@ export async function toggleSchedulerJob(id: string): Promise<{ id: string; name
 export type ClimateState = 'TURBULENT' | 'TENSE' | 'RADIANT' | 'BALANCED' | 'NEUTRAL';
 
 export interface EmotionClimate {
-  emotion: string; count: number; pct: number; avg_intensity: number;
+  emotion: string;
+  count: number;
+  pct: number;
+  avg_intensity: number;
 }
 export interface EmotionalPressure {
-  total_signals: number; negative_count: number; high_intensity_count: number;
-  pressure_pct: number; positivity_pct: number;
+  total_signals: number;
+  negative_count: number;
+  high_intensity_count: number;
+  pressure_pct: number;
+  positivity_pct: number;
 }
-export interface MoodForecastPoint { week: string; emotion: string; cnt: number }
-export interface IntensityBand     { intensity: string; count: number; pct: number }
+export interface MoodForecastPoint {
+  week: string;
+  emotion: string;
+  cnt: number;
+}
+export interface IntensityBand {
+  intensity: string;
+  count: number;
+  pct: number;
+}
 
 export interface WorldWeatherData {
   climate: EmotionClimate[];
@@ -971,12 +1212,29 @@ export interface WorldWeatherData {
 }
 
 export interface SymbolTrend {
-  manifestation: string; current_count: number; prior_count: number;
-  delta: number; growth_pct: number; trend: 'rising' | 'falling';
+  manifestation: string;
+  current_count: number;
+  prior_count: number;
+  delta: number;
+  growth_pct: number;
+  trend: 'rising' | 'falling';
 }
-export interface EmergingSymbol  { manifestation: string; count: number; avg_confidence: number }
-export interface ConsistentSymbol{ manifestation: string; current_count: number; prior_count: number; abs_delta: number }
-export interface SymbolTotals    { unique_symbols: number; total_appearances: number; avg_confidence: number }
+export interface EmergingSymbol {
+  manifestation: string;
+  count: number;
+  avg_confidence: number;
+}
+export interface ConsistentSymbol {
+  manifestation: string;
+  current_count: number;
+  prior_count: number;
+  abs_delta: number;
+}
+export interface SymbolTotals {
+  unique_symbols: number;
+  total_appearances: number;
+  avg_confidence: number;
+}
 
 export interface SymbolEconomyData {
   rising: SymbolTrend[];
@@ -988,11 +1246,29 @@ export interface SymbolEconomyData {
 }
 
 export interface DominantArchetype {
-  archetype: string; activations: number; pct: number; avg_confidence: number; unique_dreamers: number;
+  archetype: string;
+  activations: number;
+  pct: number;
+  avg_confidence: number;
+  unique_dreamers: number;
 }
-export interface ArchetypeWeekPoint   { week: string; archetype: string; count: number }
-export interface ArchetypeChange      { archetype: string; current_count: number; prior_count: number; delta: number; pct_change: number }
-export interface ArchetypeEmotionPair { archetype: string; emotion: string; co_occurrences: number }
+export interface ArchetypeWeekPoint {
+  week: string;
+  archetype: string;
+  count: number;
+}
+export interface ArchetypeChange {
+  archetype: string;
+  current_count: number;
+  prior_count: number;
+  delta: number;
+  pct_change: number;
+}
+export interface ArchetypeEmotionPair {
+  archetype: string;
+  emotion: string;
+  co_occurrences: number;
+}
 
 export interface ArchetypeDynamicsData {
   dominant: DominantArchetype[];
@@ -1018,10 +1294,29 @@ export interface ConsciousnessIndexData {
   computedAt: string;
 }
 
-export interface MonthlyEra        { month: string; emotion: string; dominance_pct: number; total_signals: number }
-export interface TransitionPhase   { week: string; from_emotion: string; to_emotion: string; is_transition: boolean }
-export interface QuarterlyProfile  { quarter: string; season_emotion: string; season_archetype: string | null; emotion_count: number }
-export interface CurrentSeasonItem { emotion: string; count: number; pct: number }
+export interface MonthlyEra {
+  month: string;
+  emotion: string;
+  dominance_pct: number;
+  total_signals: number;
+}
+export interface TransitionPhase {
+  week: string;
+  from_emotion: string;
+  to_emotion: string;
+  is_transition: boolean;
+}
+export interface QuarterlyProfile {
+  quarter: string;
+  season_emotion: string;
+  season_archetype: string | null;
+  emotion_count: number;
+}
+export interface CurrentSeasonItem {
+  emotion: string;
+  count: number;
+  pct: number;
+}
 
 export interface DreamSeasonsData {
   monthlyEras: MonthlyEra[];
@@ -1043,7 +1338,9 @@ export async function fetchSymbolEconomy(): Promise<SymbolEconomyData> {
 }
 
 export async function fetchArchetypeDynamics(weeks = 8): Promise<ArchetypeDynamicsData> {
-  const { data } = await api.get<{ data: ArchetypeDynamicsData }>(`/admin/world/archetypes?weeks=${weeks}`);
+  const { data } = await api.get<{ data: ArchetypeDynamicsData }>(
+    `/admin/world/archetypes?weeks=${weeks}`,
+  );
   return data.data;
 }
 
@@ -1060,78 +1357,129 @@ export async function fetchDreamSeasons(): Promise<DreamSeasonsData> {
 // ── Business — Revenue & Growth ───────────────────────────────────────────────
 
 export interface RevenueUserStats {
-  total_users: number; active_users: number;
-  new_30d: number; new_7d: number; dau_7d: number; mau_30d: number;
+  total_users: number;
+  active_users: number;
+  new_30d: number;
+  new_7d: number;
+  dau_7d: number;
+  mau_30d: number;
 }
 export interface RevenueDreamStats {
-  total_dreams: number; dreams_30d: number; dreamers_total: number; avg_per_user: number;
+  total_dreams: number;
+  dreams_30d: number;
+  dreamers_total: number;
+  avg_per_user: number;
 }
 export interface RevenueEngagementStats {
-  users_with_likes: number; total_interactions: number;
-  avg_interactions_per_dream: number; viral_dreams: number;
+  users_with_likes: number;
+  total_interactions: number;
+  avg_interactions_per_dream: number;
+  viral_dreams: number;
 }
-export interface GrowthWeekPoint { week: string; dreams: number }
-export interface TopEngager      { username: string; dream_count: number; likes_received: number }
+export interface GrowthWeekPoint {
+  week: string;
+  dreams: number;
+}
+export interface TopEngager {
+  username: string;
+  dream_count: number;
+  likes_received: number;
+}
 export interface RevenuePlaceholder {
-  mrr: null; arr: null; arpu: null;
-  premiumUsers: number; premiumConversionPct: number;
-  adRevenue: null; totalRevenue: null; paymentStatus: string;
+  mrr: null;
+  arr: null;
+  arpu: null;
+  premiumUsers: number;
+  premiumConversionPct: number;
+  adRevenue: null;
+  totalRevenue: null;
+  paymentStatus: string;
 }
 export interface RevenueDashboardData {
-  userStats:       RevenueUserStats | null;
-  dreamStats:      RevenueDreamStats | null;
+  userStats: RevenueUserStats | null;
+  dreamStats: RevenueDreamStats | null;
   engagementStats: RevenueEngagementStats | null;
-  growthTrend:     GrowthWeekPoint[];
-  topEngagers:     TopEngager[];
-  revenue:         RevenuePlaceholder;
-  computedAt:      string;
+  growthTrend: GrowthWeekPoint[];
+  topEngagers: TopEngager[];
+  revenue: RevenuePlaceholder;
+  computedAt: string;
 }
 
 export interface BehaviorSegment {
-  id: string; label: string; color: string; icon: string;
-  count: number; pct: number; description: string; badge: string;
+  id: string;
+  label: string;
+  color: string;
+  icon: string;
+  count: number;
+  pct: number;
+  description: string;
+  badge: string;
   avgDreams?: string | number;
 }
 export interface ArchetypeSegment {
-  archetype: string; user_count: number; activation_count: number; avg_confidence: number;
+  archetype: string;
+  user_count: number;
+  activation_count: number;
+  avg_confidence: number;
 }
-export interface EmotionSegment { emotion: string; user_count: number }
+export interface EmotionSegment {
+  emotion: string;
+  user_count: number;
+}
 export interface UserSegmentsData {
-  totalUsers:       number;
+  totalUsers: number;
   behaviorSegments: BehaviorSegment[];
   archetypeSegments: ArchetypeSegment[];
-  emotionSegments:  EmotionSegment[];
-  computedAt:       string;
+  emotionSegments: EmotionSegment[];
+  computedAt: string;
 }
 
 export interface PlacementZone {
-  id: string; label: string; status: string; reach: string;
+  id: string;
+  label: string;
+  status: string;
+  reach: string;
 }
 export interface PlatformContext {
-  addressable_audience: number; total_dreams_30d: number; emotion_variety: number;
+  addressable_audience: number;
+  total_dreams_30d: number;
+  emotion_variety: number;
 }
 export interface CampaignsData {
-  campaigns:        unknown[];
-  campaignStatus:   string;
-  platformContext:  PlatformContext | null;
-  placementZones:   PlacementZone[];
-  computedAt:       string;
+  campaigns: unknown[];
+  campaignStatus: string;
+  platformContext: PlatformContext | null;
+  placementZones: PlacementZone[];
+  computedAt: string;
 }
 
 export interface AdPlacement {
-  id: string; label: string; format: string; status: string;
-  safeContent: boolean; estimatedCTR: null; description: string;
+  id: string;
+  label: string;
+  format: string;
+  status: string;
+  safeContent: boolean;
+  estimatedCTR: null;
+  description: string;
 }
-export interface AdSafetyCheck { label: string; status: string; detail: string }
-export interface AudienceReach { total: number; monthly: number; weekly: number }
+export interface AdSafetyCheck {
+  label: string;
+  status: string;
+  detail: string;
+}
+export interface AudienceReach {
+  total: number;
+  monthly: number;
+  weekly: number;
+}
 export interface AdvertisingData {
-  adStatus:      string;
-  safetyStatus:  string;
+  adStatus: string;
+  safetyStatus: string;
   audienceReach: AudienceReach;
-  placements:    AdPlacement[];
-  safetyChecks:  AdSafetyCheck[];
-  metrics:       { impressions: null; clicks: null; ctr: null; revenue: null };
-  computedAt:    string;
+  placements: AdPlacement[];
+  safetyChecks: AdSafetyCheck[];
+  metrics: { impressions: null; clicks: null; ctr: null; revenue: null };
+  computedAt: string;
 }
 
 export async function fetchRevenueDashboard(): Promise<RevenueDashboardData> {
