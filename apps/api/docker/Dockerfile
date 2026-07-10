@@ -9,9 +9,18 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 COPY packages/utils/package.json ./packages/utils/
 
-RUN npm ci --workspace=apps/api --workspace=packages/shared-types \
-           --workspace=packages/utils --workspace=packages/typescript-config \
-           --workspace=packages/eslint-config --ignore-scripts
+# Stub workspaces not needed for this API build so npm can resolve the
+# workspace graph without requiring their deps in the lockfile.
+RUN mkdir -p apps/admin apps/mobile && \
+    printf '{"name":"@dreamcloud/admin","version":"0.1.0","private":true}\n' > apps/admin/package.json && \
+    printf '{"name":"@dreamcloud/mobile","version":"0.1.0","private":true}\n' > apps/mobile/package.json
+
+RUN npm ci --workspace=apps/api \
+           --workspace=packages/shared-types \
+           --workspace=packages/utils \
+           --workspace=packages/typescript-config \
+           --workspace=packages/eslint-config \
+           --ignore-scripts
 
 # ── Stage 2: builder ─────────────────────────────────────────
 FROM node:22-alpine AS builder
@@ -37,7 +46,9 @@ RUN addgroup -S -g 1001 apigroup && \
 WORKDIR /app
 
 COPY --from=builder --chown=apiuser:apigroup /app/apps/api/dist ./dist
-COPY --from=deps    --chown=apiuser:apigroup /app/apps/api/node_modules ./node_modules
+# npm workspace hoists all runtime deps to root node_modules, not
+# apps/api/node_modules — copy from root of the deps stage.
+COPY --from=deps    --chown=apiuser:apigroup /app/node_modules ./node_modules
 COPY --from=builder --chown=apiuser:apigroup /app/apps/api/package.json ./package.json
 
 USER apiuser
