@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth.store';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -50,10 +51,12 @@ export default function RootLayout() {
   }, [isLoading]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar style="light" />
-      <AuthGuard />
-      <Stack screenOptions={{ headerShown: false }} />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="light" />
+        <AuthGuard />
+        <Stack screenOptions={{ headerShown: false }} />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

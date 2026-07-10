@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Dimensions, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,13 +10,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, Line, RadialGradient, Stop } from 'react-native-svg';
 
-const { width: W, height: H } = Dimensions.get('window');
-
 function seeded(n: number): number {
   return Math.abs((((Math.sin(n * 127.1 + 311.7) * 43758.5453) % 1) + 1) % 1);
 }
 
-// ── Deterministic static data ────────────────────────────────────────────────
+// ── Deterministic static data (dimension-independent) ────────────────────────
 const STARS = Array.from({ length: 38 }, (_, i) => ({
   cx: seeded(i * 3 + 1) * 100,
   cy: seeded(i * 3 + 2) * 100,
@@ -44,18 +42,29 @@ for (let i = 0; i < STARS.length; i++) {
 const GRID_H = Array.from({ length: 6 }, (_, i) => (i + 1) * (100 / 7));
 const GRID_V = Array.from({ length: 9 }, (_, i) => (i + 1) * (100 / 10));
 
-// ── Floating orb configs ─────────────────────────────────────────────────────
+// ── Orb/ring configs ─────────────────────────────────────────────────────────
 const ORBS = [
   { id: 0, x: 0.14, y: 0.2, size: 150, color: '#7B6FFF', op: 0.1, dur: 8200, del: 0 },
   { id: 1, x: 0.8, y: 0.58, size: 210, color: '#CC80FF', op: 0.065, dur: 10500, del: 1400 },
   { id: 2, x: 0.9, y: 0.16, size: 110, color: '#00CFFF', op: 0.085, dur: 7000, del: 700 },
   { id: 3, x: 0.26, y: 0.84, size: 130, color: '#9B6FFF', op: 0.075, dur: 9200, del: 2600 },
 ] as const;
-
 const RING_DELAYS = [0, 2300, 4600] as const;
 
-// ── FloatingOrb ──────────────────────────────────────────────────────────────
-function FloatingOrb({ x, y, size, color, op, dur, del }: (typeof ORBS)[number]) {
+// ── FloatingOrb (requires W, H from parent — never reads Dimensions directly) ─
+interface OrbProps {
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  op: number;
+  dur: number;
+  del: number;
+  W: number;
+  H: number;
+}
+
+function FloatingOrb({ x, y, size, color, op, dur, del, W, H }: OrbProps) {
   const float = useSharedValue(0);
   const breathe = useSharedValue(0.65);
 
@@ -98,8 +107,14 @@ function FloatingOrb({ x, y, size, color, op, dur, del }: (typeof ORBS)[number])
   );
 }
 
-// ── PulseRing ────────────────────────────────────────────────────────────────
-function PulseRing({ del }: { del: number }) {
+// ── PulseRing ─────────────────────────────────────────────────────────────────
+interface RingProps {
+  del: number;
+  W: number;
+  H: number;
+}
+
+function PulseRing({ del, W, H }: RingProps) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -136,11 +151,23 @@ function PulseRing({ del }: { del: number }) {
   );
 }
 
-// ── NeuralBackground ─────────────────────────────────────────────────────────
+// ── NeuralBackground ──────────────────────────────────────────────────────────
+// The SVG layer (stars/grid/lines) is dimension-independent — safe to render
+// during Expo's SSG pass.
+// The orbs and pulse rings need real viewport dimensions. They are gated behind
+// a `ready` flag that only becomes true after the first client-side effect,
+// preventing a hydration mismatch between SSG (Dimensions → 0×0) and browser.
 export default React.memo(function NeuralBackground() {
+  const { width: W, height: H } = useWindowDimensions();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
+
   return (
     <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-      {/* Static SVG layer: grid · stars · constellation lines */}
+      {/* Static SVG: dimension-independent via viewBox, renders during SSG */}
       <Svg
         style={StyleSheet.absoluteFillObject}
         viewBox="0 0 100 100"
@@ -192,15 +219,9 @@ export default React.memo(function NeuralBackground() {
         ))}
       </Svg>
 
-      {/* Animated floating orbs */}
-      {ORBS.map((orb) => (
-        <FloatingOrb key={orb.id} {...orb} />
-      ))}
-
-      {/* Pulse rings from center */}
-      {RING_DELAYS.map((del, i) => (
-        <PulseRing key={i} del={del} />
-      ))}
+      {/* Animated layers: only render on client with real dimensions */}
+      {ready && W > 0 && ORBS.map((orb) => <FloatingOrb key={orb.id} {...orb} W={W} H={H} />)}
+      {ready && W > 0 && RING_DELAYS.map((del, i) => <PulseRing key={i} del={del} W={W} H={H} />)}
     </View>
   );
 });
