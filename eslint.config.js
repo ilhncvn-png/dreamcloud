@@ -24,6 +24,8 @@ module.exports = [
       '**/test/**',
       '**/*.spec.ts',
       '**/*.e2e-spec.ts',
+      // Standalone seed/migration runner scripts use console and non-null assertions by design
+      '**/database/seeds/**',
     ],
   },
 
