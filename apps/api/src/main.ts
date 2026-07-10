@@ -23,9 +23,16 @@ async function bootstrap() {
   // can be served at their literal paths without an extra api/v1 prepended.
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'api/v1/health'] });
 
-  const defaultOrigins = ['http://localhost:4000', 'http://localhost:8081', 'http://localhost:19006'];
+  const defaultOrigins = [
+    'http://localhost:4000',
+    'http://localhost:8081',
+    'http://localhost:19006',
+  ];
   const corsOrigins = process.env['CORS_ORIGINS']
-    ? process.env['CORS_ORIGINS'].split(',').map((o) => o.trim()).filter(Boolean)
+    ? process.env['CORS_ORIGINS']
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean)
     : defaultOrigins;
 
   // Allow the admin panel and mobile dev server to call the API
@@ -60,8 +67,11 @@ async function bootstrap() {
   const port = parseInt(process.env['PORT'] ?? '3000', 10);
   await app.listen(port, '0.0.0.0');
 
+  // eslint-disable-next-line no-console
   console.log(`DreamCloud API listening on 0.0.0.0:${port}`);
+  // eslint-disable-next-line no-console
   console.log(`NODE_ENV: ${process.env['NODE_ENV'] ?? 'development'}`);
+  // eslint-disable-next-line no-console
   console.log(`Healthcheck available at /health`);
 }
 
