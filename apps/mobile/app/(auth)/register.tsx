@@ -1,25 +1,26 @@
 import { useState } from 'react';
 import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm, Controller } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '@/store/auth.store';
-import { Colors } from '@/constants/colors';
+import NeuralBackground from '@/components/auth/NeuralBackground';
+import DreamInput from '@/components/auth/DreamInput';
+import DreamButton from '@/components/auth/DreamButton';
+import AuthErrorCard from '@/components/auth/AuthErrorCard';
 
+// ─── Schema (unchanged) ──────────────────────────────────────────────────────
 const schema = z
   .object({
     email: z.string().email('Geçerli bir e-posta girin'),
@@ -42,6 +43,9 @@ const schema = z
 
 type FormData = z.infer<typeof schema>;
 
+const MONO = Platform.select({ ios: 'Courier New', android: 'monospace', default: 'monospace' });
+
+// ─── Register screen ──────────────────────────────────────────────────────────
 export default function RegisterScreen() {
   const { register } = useAuthStore();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -55,6 +59,7 @@ export default function RegisterScreen() {
     defaultValues: { email: '', username: '', password: '', confirmPassword: '' },
   });
 
+  // ── Submit (unchanged logic) ──────────────────────────────────────────────
   const onSubmit = async (data: FormData) => {
     setServerError(null);
     try {
@@ -77,67 +82,68 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <View style={styles.root}>
+      <NeuralBackground />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View style={styles.header}>
-            <Image
-              source={require('../../assets/images/logo-colored.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.title}>Hesap Oluştur</Text>
-            <Text style={styles.subtitle}>Rüya yolculuğuna başla</Text>
-          </View>
-
-          <View style={styles.form}>
-            {serverError && (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorBannerText}>{serverError}</Text>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── Header ──────────────────────────────────────────────── */}
+            <View style={styles.headerSection}>
+              <View style={styles.chip}>
+                <View style={styles.chipDot} />
+                <Text style={[styles.chipText, { fontFamily: MONO }]}>NEURAL ENROLLMENT</Text>
               </View>
-            )}
+              <Text style={styles.heading}>Aramıza Katıl</Text>
+              <Text style={styles.subtitle}>
+                Rüyalarını kaydet, bilinçaltını keşfet.{'\n'}Kollektif düşün bir parçası ol.
+              </Text>
+            </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>E-posta</Text>
+            {/* ── Glass card ──────────────────────────────────────────── */}
+            <View style={styles.card}>
+              <View style={styles.cardSheen} />
+
+              {serverError != null && <AuthErrorCard message={serverError} />}
+
+              {/* Email */}
               <Controller
                 control={control}
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.email && styles.inputError]}
-                    placeholder="ornek@email.com"
-                    placeholderTextColor={Colors.textMuted}
+                  <DreamInput
+                    label="E-Posta — KİMLİK"
+                    placeholder="dreamer@dreamcloud.ai"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    error={errors.email?.message}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
                   />
                 )}
               />
-              {errors.email && <Text style={styles.fieldError}>{errors.email.message}</Text>}
-            </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Kullanıcı Adı</Text>
+              {/* Username */}
               <Controller
                 control={control}
                 name="username"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.username && styles.inputError]}
-                    placeholder="kullanici_adi"
-                    placeholderTextColor={Colors.textMuted}
+                  <DreamInput
+                    label="Kullanıcı Adı — Dreamer Kimliği"
+                    placeholder="dreamer_adi"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    error={errors.username?.message}
                     onBlur={onBlur}
                     onChangeText={(t) => {
                       onChange(t.toLowerCase());
@@ -146,150 +152,210 @@ export default function RegisterScreen() {
                   />
                 )}
               />
-              {errors.username && <Text style={styles.fieldError}>{errors.username.message}</Text>}
-            </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Şifre</Text>
+              {/* Password */}
               <Controller
                 control={control}
                 name="password"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.password && styles.inputError]}
-                    placeholder="••••••••"
-                    placeholderTextColor={Colors.textMuted}
+                  <DreamInput
+                    label="Şifre — Güvenlik Anahtarı"
+                    placeholder="••••••••••••"
                     secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    error={errors.password?.message}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
                   />
                 )}
               />
-              {errors.password && <Text style={styles.fieldError}>{errors.password.message}</Text>}
-            </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Şifre Tekrar</Text>
+              {/* Confirm password */}
               <Controller
                 control={control}
                 name="confirmPassword"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.confirmPassword && styles.inputError]}
-                    placeholder="••••••••"
-                    placeholderTextColor={Colors.textMuted}
+                  <DreamInput
+                    label="Şifre Tekrar — Doğrulama"
+                    placeholder="••••••••••••"
                     secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    error={errors.confirmPassword?.message}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
                   />
                 )}
               />
-              {errors.confirmPassword && (
-                <Text style={styles.fieldError}>{errors.confirmPassword.message}</Text>
-              )}
+
+              {/* Submit */}
+              <DreamButton
+                title="Yolculuğu Başlat"
+                onPress={() => {
+                  void handleSubmit(onSubmit)();
+                }}
+                loading={isSubmitting}
+                disabled={isSubmitting}
+              />
+
+              {/* Legal */}
+              <View style={styles.legalRow}>
+                <Text style={[styles.legalText, { fontFamily: MONO }]}>{'[ KAYIT → '}</Text>
+                <Pressable
+                  onPress={() => {
+                    void Linking.openURL('https://dreamcloud.app/terms');
+                  }}
+                  accessibilityRole="link"
+                >
+                  <Text style={[styles.legalLink, { fontFamily: MONO }]}>KOŞULLAR</Text>
+                </Pressable>
+                <Text style={[styles.legalText, { fontFamily: MONO }]}>{' + '}</Text>
+                <Pressable
+                  onPress={() => {
+                    void Linking.openURL('https://dreamcloud.app/privacy');
+                  }}
+                  accessibilityRole="link"
+                >
+                  <Text style={[styles.legalLink, { fontFamily: MONO }]}>GİZLİLİK</Text>
+                </Pressable>
+                <Text style={[styles.legalText, { fontFamily: MONO }]}>{' ]'}</Text>
+              </View>
             </View>
 
-            <Pressable
-              style={[styles.primaryButton, isSubmitting && styles.primaryButtonDisabled]}
-              onPress={() => {
-                void handleSubmit(onSubmit)();
-              }}
-              disabled={isSubmitting}
-              accessibilityRole="button"
-              accessibilityLabel="Kayıt ol"
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.primaryButtonText}>Kayıt Ol</Text>
-              )}
-            </Pressable>
-
-            {/* Legal */}
-            <View style={styles.legalRow}>
-              <Text style={styles.legalText}>Kayıt olarak </Text>
-              <Pressable onPress={() => { void Linking.openURL('https://dreamcloud.app/terms'); }}>
-                <Text style={styles.legalLink}>Kullanım Koşulları</Text>
-              </Pressable>
-              <Text style={styles.legalText}>'nı ve </Text>
-              <Pressable onPress={() => { void Linking.openURL('https://dreamcloud.app/privacy'); }}>
-                <Text style={styles.legalLink}>Gizlilik Politikası</Text>
-              </Pressable>
-              <Text style={styles.legalText}>'nı kabul etmiş olursunuz.</Text>
+            {/* ── Footer ──────────────────────────────────────────────── */}
+            <View style={styles.footer}>
+              <Link href="/(auth)/login" asChild>
+                <Pressable style={styles.footerRow} accessibilityRole="link">
+                  <Text style={styles.footerText}>Zaten hesabın var mı? </Text>
+                  <Text style={styles.footerLink}>Giriş Yap</Text>
+                </Pressable>
+              </Link>
+              <View style={styles.statusRow}>
+                <View style={styles.statusDot} />
+                <Text style={[styles.statusText, { fontFamily: MONO }]}>ENCRYPTION ACTIVE</Text>
+              </View>
             </View>
-
-            <Link href="/(auth)/login" asChild>
-              <Pressable style={styles.linkButton}>
-                <Text style={styles.linkText}>Zaten hesabın var mı? </Text>
-                <Text style={styles.linkTextBold}>Giriş Yap</Text>
-              </Pressable>
-            </Link>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  root: { flex: 1, backgroundColor: '#060614' },
+  safeArea: { flex: 1 },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: 24 },
+  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32, gap: 24 },
 
-  header: { paddingTop: 40, paddingBottom: 32 },
-  logo: { width: 140, height: 56, marginBottom: 16, borderRadius: 12 },
-  title: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary, marginBottom: 6 },
-  subtitle: { fontSize: 15, color: Colors.textSecondary },
+  headerSection: { gap: 10 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  chipDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#CC80FF',
+    shadowColor: '#CC80FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  chipText: {
+    fontSize: 9,
+    letterSpacing: 1.8,
+    color: 'rgba(204,128,255,0.6)',
+    textTransform: 'uppercase',
+  },
+  heading: {
+    fontSize: 26,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    color: 'rgba(232,232,255,0.96)',
+    textShadowColor: 'rgba(123,111,255,0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: 'rgba(232,232,255,0.38)',
+    lineHeight: 20,
+  },
 
-  form: { paddingBottom: 32, gap: 16 },
-
-  errorBanner: {
-    backgroundColor: '#3D1515',
-    borderRadius: 10,
+  card: {
+    backgroundColor: 'rgba(12,8,32,0.95)',
     borderWidth: 1,
-    borderColor: Colors.error,
-    padding: 12,
+    borderColor: 'rgba(123,111,255,0.22)',
+    borderRadius: 24,
+    padding: 24,
+    gap: 16,
+    shadowColor: '#7B6FFF',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.16,
+    shadowRadius: 32,
+    elevation: 14,
+    overflow: 'hidden',
   },
-  errorBannerText: { color: Colors.error, fontSize: 14, textAlign: 'center' },
-
-  field: { gap: 6 },
-  label: { color: Colors.textSecondary, fontSize: 13, fontWeight: '500', marginLeft: 2 },
-  input: {
-    backgroundColor: Colors.inputBackground,
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: Colors.textPrimary,
-    fontSize: 15,
+  cardSheen: {
+    position: 'absolute',
+    top: 0,
+    left: 28,
+    right: 28,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
-  inputError: { borderColor: Colors.error },
-  fieldError: { color: Colors.error, fontSize: 12, marginLeft: 2 },
-
-  primaryButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  primaryButtonDisabled: { opacity: 0.6 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 
   legalRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    alignItems: 'center',
     gap: 0,
+    paddingTop: 4,
   },
-  legalText: { color: Colors.textMuted, fontSize: 12, lineHeight: 18 },
-  legalLink: { color: Colors.primary, fontSize: 12, fontWeight: '600', lineHeight: 18 },
+  legalText: {
+    fontSize: 9,
+    letterSpacing: 0.5,
+    color: 'rgba(232,232,255,0.2)',
+  },
+  legalLink: {
+    fontSize: 9,
+    letterSpacing: 0.5,
+    color: 'rgba(123,111,255,0.55)',
+    fontWeight: '600',
+  },
 
-  linkButton: { flexDirection: 'row', justifyContent: 'center', paddingVertical: 8 },
-  linkText: { color: Colors.textSecondary, fontSize: 14 },
-  linkTextBold: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
+  footer: { alignItems: 'center', gap: 14, paddingBottom: 8 },
+  footerRow: { flexDirection: 'row', alignItems: 'center' },
+  footerText: {
+    fontSize: 14,
+    color: 'rgba(232,232,255,0.35)',
+  },
+  footerLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(123,111,255,0.85)',
+  },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statusDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#00CFFF',
+    shadowColor: '#00CFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  statusText: {
+    fontSize: 8,
+    letterSpacing: 1.4,
+    color: 'rgba(232,232,255,0.2)',
+    textTransform: 'uppercase',
+  },
 });
