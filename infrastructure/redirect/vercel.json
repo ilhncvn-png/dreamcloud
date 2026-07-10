@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://dreamclaude.org/$1",
+      "permanent": true
+    }
+  ]
+}
