@@ -368,7 +368,7 @@ export function LiveSystemProvider({ children }: { children: ReactNode }) {
   // Seed risk events from alerts
   useEffect(() => {
     if (!alerts?.alerts.length) return;
-    const riskEvents = alerts.alerts.slice(0, 2).map((a) => ({
+    const riskEvents: LiveEvent[] = alerts.alerts.slice(0, 2).map((a) => ({
       id: uid(),
       category: 'risk',
       icon: '⚑',
