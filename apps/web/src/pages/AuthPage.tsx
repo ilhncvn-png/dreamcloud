@@ -124,6 +124,27 @@ function AtmosphericCanvas({ mousePos }: { mousePos: { x: number; y: number } })
       { x: W() * 0.5, y: H() * 0.5, r: 280, hue: 210, phase: 4.2, speed: 0.0004 },
     ];
 
+    // Slowly rising glowing particles
+    type Mote = {
+      x: number;
+      y: number;
+      vy: number;
+      r: number;
+      opacity: number;
+      hue: number;
+      phase: number;
+    };
+    const MOTE_COUNT = 28;
+    const motes: Mote[] = Array.from({ length: MOTE_COUNT }, () => ({
+      x: Math.random() * W(),
+      y: Math.random() * H(),
+      vy: 0.12 + Math.random() * 0.22,
+      r: 0.5 + Math.random() * 1.2,
+      opacity: 0.06 + Math.random() * 0.18,
+      hue: 240 + Math.random() * 60,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
     let frame = 0;
     let raf: number;
     const MAX_DIST = 130;
@@ -184,6 +205,29 @@ function AtmosphericCanvas({ mousePos }: { mousePos: { x: number; y: number } })
           n.y = H();
           n.vy *= -1;
         }
+      }
+
+      // Rising glow motes
+      for (const m of motes) {
+        m.y -= m.vy;
+        m.x += Math.sin(t * 0.5 + m.phase) * 0.3;
+        if (m.y < -10) {
+          m.y = H() + 10;
+          m.x = Math.random() * W();
+        }
+        const pulse = 0.5 + 0.5 * Math.sin(t * 1.8 + m.phase);
+        const op = m.opacity * (0.6 + 0.4 * pulse);
+        const grd = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 3.5);
+        grd.addColorStop(0, `hsla(${m.hue},80%,75%,${op})`);
+        grd.addColorStop(1, 'transparent');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.r * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.r * (0.6 + 0.4 * pulse), 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${m.hue},90%,85%,${op * 1.8})`;
+        ctx.fill();
       }
 
       // Connections
@@ -317,8 +361,11 @@ function WordCloud() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Dream Signals rotating section
+// Accepts optional `signals` prop — defaults to static placeholders.
+// When the live API is wired, pass: <DreamSignals signals={liveSignals} />
+// where liveSignals: Array<{ icon: string; label: string; text: string }>
 // ─────────────────────────────────────────────────────────────────────────────
-function DreamSignals() {
+function DreamSignals({ signals = DREAM_SIGNALS }: { signals?: typeof DREAM_SIGNALS }) {
   const [current, setCurrent] = useState(0);
   const [visible, setVisible] = useState(true);
 
@@ -326,14 +373,14 @@ function DreamSignals() {
     const tick = setInterval(() => {
       setVisible(false);
       setTimeout(() => {
-        setCurrent((c) => (c + 1) % DREAM_SIGNALS.length);
+        setCurrent((c) => (c + 1) % signals.length);
         setVisible(true);
       }, 500);
     }, 4500);
     return () => clearInterval(tick);
-  }, []);
+  }, [signals.length]);
 
-  const signal = DREAM_SIGNALS[current];
+  const signal = signals[current];
 
   return (
     <div style={{ marginTop: 40 }}>
@@ -373,7 +420,7 @@ function DreamSignals() {
 
       {/* Progress dots */}
       <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 16 }}>
-        {DREAM_SIGNALS.map((_, i) => (
+        {signals.map((_, i) => (
           <div
             key={i}
             style={{
@@ -462,7 +509,7 @@ function EarlyAccessModal({ onClose }: { onClose: () => void }) {
         (err as { response?: { data?: { error?: { message?: string }; message?: string } } })
           ?.response?.data?.error?.message ??
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      setError(msg ?? 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -655,7 +702,7 @@ function EarlyAccessModal({ onClose }: { onClose: () => void }) {
                   marginBottom: 8,
                 }}
               >
-                E-Posta Adresiniz
+                Your Email Address
               </label>
               <input
                 className="dc-input"
@@ -884,22 +931,9 @@ function LeftPanel({
           bottom: 28,
           left: 64,
           right: 56,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
         }}
       >
         <span style={{ fontSize: 11, color: 'rgba(232,232,255,0.15)' }}>© 2025 DreamCloud</span>
-        <a
-          href="https://app.dreamclaude.org"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontSize: 11, color: 'rgba(123,111,255,0.4)', transition: 'color 0.2s' }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(167,150,255,0.7)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(123,111,255,0.4)')}
-        >
-          Mobile App →
-        </a>
       </div>
     </div>
   );
@@ -934,7 +968,7 @@ function LoginForm({
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response
         ?.data?.error?.message;
-      setError(msg ?? 'Giriş başarısız. Bilgilerinizi kontrol edin.');
+      setError(msg ?? 'Sign in failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -954,7 +988,7 @@ function LoginForm({
             marginBottom: 8,
           }}
         >
-          E-Posta
+          Email
         </label>
         <input
           className={`dc-input${error ? ' error' : ''}`}
@@ -979,7 +1013,7 @@ function LoginForm({
             marginBottom: 8,
           }}
         >
-          Şifre
+          Password
           <button
             type="button"
             onClick={onSwitchForgot}
@@ -997,7 +1031,7 @@ function LoginForm({
             onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(167,150,255,0.85)')}
             onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(123,111,255,0.55)')}
           >
-            Şifremi unuttum
+            Forgot password
           </button>
         </label>
         <input
@@ -1053,16 +1087,12 @@ function LoginForm({
             fontWeight: 500,
           }}
         >
-          {loading ? (
-            <span className="dc-spinner" style={{ width: 18, height: 18 }} />
-          ) : (
-            'Giriş Yap'
-          )}
+          {loading ? <span className="dc-spinner" style={{ width: 18, height: 18 }} /> : 'Sign In'}
         </button>
       </div>
 
       <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-3)', paddingTop: 4 }}>
-        Hesabın yok mu?{' '}
+        Don&apos;t have an account?{' '}
         <button
           type="button"
           onClick={onRequestAccess}
@@ -1079,7 +1109,7 @@ function LoginForm({
           onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(204,128,255,0.9)')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(167,150,255,0.75)')}
         >
-          Erken Erişim İste
+          Request Early Access
         </button>
       </div>
     </form>
@@ -1103,7 +1133,7 @@ function ForgotPasswordForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
       await forgotPassword(email);
       setSent(true);
     } catch {
-      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -1128,9 +1158,9 @@ function ForgotPasswordForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
         >
           ✉️
         </div>
-        <p style={{ fontSize: 15, color: 'var(--text-1)', marginBottom: 8 }}>E-posta gönderildi</p>
+        <p style={{ fontSize: 15, color: 'var(--text-1)', marginBottom: 8 }}>Email sent</p>
         <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>
-          {email} adresine sıfırlama bağlantısı gönderdik.
+          We sent a password reset link to {email}.
         </p>
         <button
           type="button"
@@ -1138,7 +1168,7 @@ function ForgotPasswordForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
           className="dc-btn dc-btn-ghost"
           style={{ marginTop: 24, width: '100%', padding: '12px', fontSize: 13 }}
         >
-          ← Giriş sayfasına dön
+          ← Back to sign in
         </button>
       </div>
     );
@@ -1147,7 +1177,7 @@ function ForgotPasswordForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.65 }}>
-        Kayıtlı e-posta adresinizi girin, şifre sıfırlama bağlantısı göndereceğiz.
+        Enter your registered email and we&apos;ll send you a reset link.
       </p>
       <div>
         <label
@@ -1161,7 +1191,7 @@ function ForgotPasswordForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
             marginBottom: 8,
           }}
         >
-          E-Posta
+          Email
         </label>
         <input
           className="dc-input"
@@ -1208,7 +1238,7 @@ function ForgotPasswordForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
           {loading ? (
             <span className="dc-spinner" style={{ width: 18, height: 18 }} />
           ) : (
-            'Sıfırlama Bağlantısı Gönder'
+            'Send Reset Link'
           )}
         </button>
       </div>
@@ -1228,7 +1258,7 @@ function ForgotPasswordForm({ onSwitchLogin }: { onSwitchLogin: () => void }) {
         onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-2)')}
         onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-3)')}
       >
-        ← Giriş sayfasına dön
+        ← Back to sign in
       </button>
     </form>
   );
@@ -1249,8 +1279,8 @@ function RightPanel({
   parallax: { x: number; y: number };
 }) {
   const panelMeta: Record<Panel, { title: string; subtitle: string }> = {
-    login: { title: 'Hoş Geldin, Dreamer', subtitle: 'Bilinçaltının kapısını aç.' },
-    forgot: { title: 'Şifreni Sıfırla', subtitle: 'Erişimini yeniden kazan.' },
+    login: { title: 'Welcome Back, Dreamer', subtitle: 'Open the door to your subconscious.' },
+    forgot: { title: 'Reset Your Password', subtitle: 'Regain access to your account.' },
   };
   const { title, subtitle } = panelMeta[panel];
 
@@ -1378,15 +1408,15 @@ function RightPanel({
             lineHeight: 1.6,
           }}
         >
-          Giriş yaparak{' '}
+          By signing in you agree to our{' '}
           <Link to="/terms" style={{ color: 'rgba(123,111,255,0.45)' }}>
-            Kullanım Şartları
+            Terms of Service
           </Link>{' '}
-          ve{' '}
+          and{' '}
           <Link to="/privacy" style={{ color: 'rgba(123,111,255,0.45)' }}>
-            Gizlilik Politikası
+            Privacy Policy
           </Link>
-          'nı kabul etmiş olursunuz.
+          .
         </p>
       </div>
     </div>
