@@ -42,6 +42,31 @@ export default function Root({ children }: PropsWithChildren) {
             __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});}`,
           }}
         />
+
+        {/* ── Global error fallback (catches hydration errors before React mounts) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function(){
+  var shown=false;
+  function showFallback(msg){
+    if(shown)return;shown=true;
+    var r=document.getElementById('root');
+    if(!r)return;
+    r.innerHTML='<div style="position:fixed;inset:0;background:#060614;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;font-family:system-ui;text-align:center">'
+      +'<div style="font-size:32px;margin-bottom:16px">⚠</div>'
+      +'<p style="color:rgba(232,232,255,.9);font-size:1.1rem;margin:0 0 8px">Bir şeyler ters gitti</p>'
+      +'<p style="color:rgba(232,232,255,.35);font-size:.8rem;margin:0 0 24px">'+msg+'</p>'
+      +'<button onclick="caches.keys().then(function(k){return Promise.all(k.map(function(c){return caches.delete(c)}))}).then(function(){location.reload()})" '
+      +'style="background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.4);color:rgba(200,192,255,.9);padding:12px 28px;border-radius:12px;cursor:pointer;font-size:.85rem">Önbelleği Temizle ve Yenile</button>'
+      +'</div>';
+  }
+  window.addEventListener('error',function(e){showFallback(e.message||'Bilinmeyen hata');});
+  window.addEventListener('unhandledrejection',function(e){showFallback((e.reason&&e.reason.message)||'Promise hatası');});
+})();
+`,
+          }}
+        />
       </head>
       <body>{children}</body>
     </html>

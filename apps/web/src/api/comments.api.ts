@@ -1,0 +1,20 @@
+import { apiClient, extract } from '@/lib/api';
+import type { Comment, CommentsPage } from '@/types';
+
+export async function getComments(dreamId: string, page = 1): Promise<CommentsPage> {
+  return extract(
+    await apiClient.get<{ data: CommentsPage }>(`/dreams/${dreamId}/comments`, {
+      params: { page, limit: 20 },
+    }),
+  );
+}
+
+export async function createComment(dreamId: string, content: string): Promise<Comment> {
+  return extract(
+    await apiClient.post<{ data: Comment }>(`/dreams/${dreamId}/comments`, { content }),
+  );
+}
+
+export async function deleteComment(dreamId: string, commentId: string): Promise<void> {
+  await apiClient.delete(`/dreams/${dreamId}/comments/${commentId}`);
+}

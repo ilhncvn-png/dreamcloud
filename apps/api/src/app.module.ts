@@ -37,6 +37,7 @@ import { EventEngineModule } from './modules/event-engine/event-engine.module';
 import { OsEngineModule } from './modules/os-engine/os-engine.module';
 import { WorldModelModule } from './modules/world-model/world-model.module';
 import { BusinessModule } from './modules/business/business.module';
+import { WaitlistModule } from './modules/waitlist/waitlist.module';
 
 @Module({
   imports: [
@@ -107,6 +108,7 @@ import { BusinessModule } from './modules/business/business.module';
     OsEngineModule,
     WorldModelModule,
     BusinessModule,
+    WaitlistModule,
   ],
   controllers: [AppController],
 })

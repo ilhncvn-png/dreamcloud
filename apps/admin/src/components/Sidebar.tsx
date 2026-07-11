@@ -132,6 +132,7 @@ const NAV: NavSection[] = [
     items: [
       { to: '/users', icon: '◉', label: 'All Users' },
       { to: '/banned-users', icon: '✕', label: 'Banned' },
+      { to: '/early-access', icon: '✉', label: 'Early Access' },
     ],
   },
   {
