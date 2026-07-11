@@ -18,6 +18,7 @@ out/
 
 # Compiled TypeScript artifacts in source directories (nest start / tsc side-effects)
 apps/api/src/**/*.js
+!apps/api/src/database/seeds/*.js
 apps/api/src/**/*.d.ts
 apps/api/test/**/*.js
 apps/api/test/**/*.d.ts
